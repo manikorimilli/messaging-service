@@ -13,7 +13,8 @@ import com.example.messaging_service.provider.MessageProvider;
 import com.example.messaging_service.provider.OutboundMessage;
 import com.example.messaging_service.provider.ProviderResult;
 
-@SpringBootTest
+@SpringBootTest(properties = { "messaging.providers.twilio.account-sid=ACtest",
+		"messaging.providers.twilio.auth-token=test-token" })
 class MessagingServiceApplicationTests {
 
 	@Test
@@ -22,16 +23,11 @@ class MessagingServiceApplicationTests {
 
 	/**
 	 * Temporary: application.properties enables TWILIO and VONAGE for SMS, and the registry
-	 * refuses to start without their adapters. These stubs stand in until the real adapters
-	 * exist. Step 7 removes the Twilio stub, Step 8 the Vonage one.
+	 * refuses to start without its adapter. This stub stands in until the real Vonage adapter
+	 * exists. Step 8 removes it.
 	 */
 	@TestConfiguration
 	static class StubProviders {
-
-		@Bean
-		MessageProvider twilioStub() {
-			return new StubProvider("TWILIO");
-		}
 
 		@Bean
 		MessageProvider vonageStub() {
