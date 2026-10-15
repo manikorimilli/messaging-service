@@ -1,98 +1,135 @@
 # Messaging Service
 
-One HTTP endpoint that sends an SMS through Twilio or Vonage. The design is in
+One HTTP endpoint that sends SMS through Twilio or Vonage. Providers are described in a JSON file,
+so a new provider usually needs no Java code. Java 21, Spring Boot 4.1. Design:
 [docs/design.md](docs/design.md).
 
-Java 21, Spring Boot 4.1.
+## How it works
 
-## Configure
-
-- `src/main/resources/providers.json`: everything about providers, in one file:
-  - `channels`: routing (which providers are enabled per channel, which is the default);
-  - `http-providers`: one block per provider describing how to call it (URL, login, body fields)
-    and how to read its replies. See [Adding a provider](#adding-a-provider).
-- `src/main/resources/application.properties`: HTTP timeouts, and the import of `.env` and
-  `providers.json`.
-
-`ProviderRegistry` owns this file: it builds one provider per block, checks everything at
-startup, and can give back any registered provider's block with its secrets masked
-(`registry.description(MessageType.SMS, "TWILIO")`, `registry.descriptions(MessageType.SMS)`).
-
-Secrets come from environment variables, or from a local `.env` file:
-
-```bash
-cp .env.example .env
+```text
+Client
+  │  POST /api/v1/messages   { "type", "provider", "to", "body" }
+  ▼
+MessageController ──► MessageService ──► ProviderRegistry  (picks the provider)
+                            │
+                            ▼
+                     MessageProvider (interface)
+                            │
+                     GenericHttpProvider  (one shared engine)
+                     uses the provider's block in providers.json
+                       ├── "twilio" block ──► Twilio API
+                       └── "vonage" block ──► Vonage API
 ```
 
-Then fill in `.env`. It is git-ignored. Real environment variables with the same names override it.
+- Every request uses the same format, whichever provider sends it.
+- `ProviderRegistry` reads `providers.json`, builds one provider per block, and checks everything
+  at startup. It can also return a provider's block with its secrets masked (`****`).
+- Each block says how to call that provider (URL, login, body fields) and how to read its reply.
 
-| Variable | Used for |
+## Quick start
+
+1. Copy the secrets template and fill in your values. `.env` is git-ignored, so it is never
+   committed:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Start the service on `http://localhost:8080`:
+
+   ```bash
+   ./mvnw spring-boot:run
+   ```
+
+3. Send an SMS (see [API](#api) for more examples):
+
+   ```bash
+   curl -i -X POST http://localhost:8080/api/v1/messages \
+     -H 'Content-Type: application/json' \
+     -d '{ "type": "SMS", "provider": "TWILIO", "to": "+91XXXXXXXXXX", "body": "Hello!" }'
+   ```
+
+The app checks its configuration at startup and refuses to start, with a clear message, if a
+secret is empty, a provider block is incomplete, or the routing is wrong.
+
+## Configuration
+
+| File | Holds |
 |---|---|
-| `TWILIO_ACCOUNT_SID` | Twilio Account SID, `AC...` (Console, Account info) |
-| `TWILIO_API_KEY`, `TWILIO_API_SECRET` | Twilio API key SID `SK...` and its secret (Console, API keys & tokens). For local testing you may use the Account SID and Auth Token instead. |
-| `TWILIO_SMS_FROM` | Your Twilio phone number, e.g. `+15551234567` |
-| `VONAGE_API_KEY`, `VONAGE_API_SECRET` | Vonage credentials (Dashboard, API settings) |
-| `VONAGE_SMS_FROM` | Your Vonage number or sender name |
+| `src/main/resources/providers.json` | Routing (`channels`) and one block per provider (`http-providers`) |
+| `.env` | Secrets and sender numbers (never committed) |
+| `.env.example` | The list of variable names, without values (committed) |
+| `src/main/resources/application.properties` | HTTP timeouts (2s connect, 10s read) |
 
-The app checks the configuration at startup and refuses to start, with a clear message, when an
-enabled provider has an empty variable, a provider block is incomplete, or the routing is wrong.
+### Secrets (`.env`)
 
-### Routing
+```properties
+TWILIO_ACCOUNT_SID=<your-account-sid>
+TWILIO_API_KEY=<your-api-key-sid>
+TWILIO_API_SECRET=<your-api-key-secret>
+TWILIO_SMS_FROM=<your-twilio-number>
+VONAGE_API_KEY=<your-api-key>
+VONAGE_API_SECRET=<your-api-secret>
+VONAGE_SMS_FROM=<your-sender-name-or-number>
+```
 
-In `providers.json`:
+| Variable | Where to find it |
+|---|---|
+| `TWILIO_ACCOUNT_SID` | Twilio Console, Account info (starts with `AC`) |
+| `TWILIO_API_KEY`, `TWILIO_API_SECRET` | Twilio Console, API keys & tokens (key starts with `SK`) |
+| `TWILIO_SMS_FROM` | Your Twilio phone number, in E.164 format |
+| `VONAGE_API_KEY`, `VONAGE_API_SECRET` | Vonage Dashboard, API settings |
+| `VONAGE_SMS_FROM` | Your Vonage number, or a sender name of up to 11 characters |
+
+Real environment variables with the same names override `.env`; use those on servers. Secrets are
+never logged and never returned by the API.
+
+### Routing (`providers.json`)
 
 ```json
-"channels": {
-  "sms": { "primary-provider": "TWILIO", "enabled-providers": ["TWILIO", "VONAGE"] }
-}
+"channels": { "sms": { "primary-provider": "TWILIO", "enabled-providers": ["TWILIO", "VONAGE"] } }
 ```
 
-- Requests without `provider` use the primary. Switch it with
-  `MESSAGING_CHANNELS_SMS_PRIMARYPROVIDER=VONAGE`, no code change.
-- To use only Twilio, set `MESSAGING_CHANNELS_SMS_ENABLEDPROVIDERS=TWILIO`. Vonage then needs no
-  credentials, and requests that name it get `503 PROVIDER_UNAVAILABLE`.
+- Requests without `provider` use the primary.
+- A provider not in `enabled-providers` needs no secrets; requests naming it get `503`.
+- Override without editing files:
 
-## Run
+  ```bash
+  MESSAGING_CHANNELS_SMS_PRIMARYPROVIDER=VONAGE ./mvnw spring-boot:run
+  ```
 
-```bash
-export TWILIO_ACCOUNT_SID=AC...
-export TWILIO_API_KEY=SK...
-export TWILIO_API_SECRET=...
-export MESSAGING_PROVIDERS_TWILIO_SMSFROM=+1...
-export VONAGE_API_KEY=...
-export VONAGE_API_SECRET=...
-export MESSAGING_PROVIDERS_VONAGE_SMSFROM=...
-./mvnw spring-boot:run
-```
+  ```bash
+  MESSAGING_CHANNELS_SMS_ENABLEDPROVIDERS=TWILIO ./mvnw spring-boot:run
+  ```
 
-The service listens on `http://localhost:8080`.
+## API
 
-## Send a message
-
-With an explicit provider:
-
-```bash
-curl -i -X POST http://localhost:8080/api/v1/messages \
-  -H 'Content-Type: application/json' \
-  -d '{ "type": "SMS", "provider": "TWILIO", "to": "+919876543210", "body": "Welcome to our platform!" }'
-```
-
-With the primary provider:
-
-```bash
-curl -i -X POST http://localhost:8080/api/v1/messages \
-  -H 'Content-Type: application/json' \
-  -d '{ "type": "SMS", "to": "+919876543210", "body": "Your verification code is 482913" }'
-```
+`POST /api/v1/messages`
 
 | Field | Required | Rules |
 |---|---|---|
 | `type` | yes | `SMS`, any letter case |
-| `provider` | no | `TWILIO` or `VONAGE`, any letter case |
+| `provider` | no | `TWILIO` or `VONAGE`, any letter case; omitted means the primary |
 | `to` | yes | E.164: `+`, country code, number (8 to 15 digits) |
 | `body` | yes | Not blank, at most 1600 characters |
 
-Success is `202 Accepted`:
+Through a chosen provider:
+
+```bash
+curl -i -X POST http://localhost:8080/api/v1/messages \
+  -H 'Content-Type: application/json' \
+  -d '{ "type": "SMS", "provider": "VONAGE", "to": "+91XXXXXXXXXX", "body": "Hello from Vonage" }'
+```
+
+Through the primary provider:
+
+```bash
+curl -i -X POST http://localhost:8080/api/v1/messages \
+  -H 'Content-Type: application/json' \
+  -d '{ "type": "SMS", "to": "+91XXXXXXXXXX", "body": "Your verification code is 482913" }'
+```
+
+Success is `202 Accepted`. It means the provider accepted the SMS, not that the phone received it:
 
 ```json
 {
@@ -100,26 +137,26 @@ Success is `202 Accepted`:
   "provider": "TWILIO",
   "providerMessageId": "SM2c7f9a1e0b3d4c5e6f7a8b9c0d1e2f3a",
   "providerStatus": "queued",
-  "acceptedAt": "2026-10-14T10:15:30Z"
+  "acceptedAt": "2026-10-15T10:15:30Z"
 }
 ```
 
-`ACCEPTED` means the provider took the message, not that the phone received it. Delivery tracking
-is not part of this service yet.
+`providerMessageId` is the provider's own id; use it to find the message in the Twilio or Vonage
+dashboard.
 
-## Errors
+### Errors
 
 Every error is `application/problem+json` with a stable `code`:
 
 | `code` | HTTP | When |
 |---|---|---|
 | `VALIDATION_FAILED` | 400 | Missing or invalid field, unknown `type`, malformed JSON |
-| `UNSUPPORTED_PROVIDER` | 400 | No adapter with that provider id |
+| `UNSUPPORTED_PROVIDER` | 400 | Unknown provider |
 | `UNSUPPORTED_MESSAGE_TYPE` | 400 | The provider cannot send this `type` |
-| `PROVIDER_UNAVAILABLE` | 503 | Provider disabled, unreachable, throttled, or returned 5xx |
-| `PROVIDER_TIMEOUT` | 504 | No reply in time; the message may or may not have been sent |
-| `PROVIDER_REJECTED` | 502 | Provider refused the message (bad number, auth, trial limits) |
-| `INTERNAL_ERROR` | 500 | Anything unexpected; details are only in the logs |
+| `PROVIDER_UNAVAILABLE` | 503 | Provider disabled, unreachable, throttled, or down |
+| `PROVIDER_TIMEOUT` | 504 | No reply in time; the SMS may or may not have been sent |
+| `PROVIDER_REJECTED` | 502 | Provider refused (bad number, credentials, trial limits) |
+| `INTERNAL_ERROR` | 500 | Unexpected; details only in the logs |
 
 Example:
 
@@ -135,42 +172,35 @@ Example:
 }
 ```
 
-## Trial accounts
+### Troubleshooting
 
-- **Twilio trial** sends only to phone numbers verified in your Twilio Console. Others are
-  rejected with error `21608`.
-- **Vonage demo mode** sends only to whitelisted test numbers. Others are rejected with status `29`.
-
-## Tests
-
-```bash
-./mvnw test
-```
-
-The tests never call Twilio or Vonage; provider HTTP calls are mocked.
+| You see | Cause | Fix |
+|---|---|---|
+| App won't start: `... is enabled for SMS but its credentials are missing` | An empty variable in `.env` | Fill it in, or remove the provider from `enabled-providers` |
+| `502`, `providerErrorCode` `21608` (Twilio) | Trial account, number not verified | Verify the number in the Twilio Console |
+| `502`, `providerErrorCode` `29` (Vonage) | Demo account, number not whitelisted | Add it as a test number in the Vonage Dashboard |
+| `502`, `providerErrorCode` `20003` (Twilio) or `4` (Vonage) | Wrong API key or secret | Check `.env` |
+| `504 PROVIDER_TIMEOUT` | The provider didn't answer in 10 seconds | Check the provider's dashboard before resending |
 
 ## Adding a provider
 
-Most providers need **no Java code**. Add a block under `messaging.http-providers` in
-`src/main/resources/providers.json`:
+Most providers need **no Java code**:
+
+1. Add a block under `http-providers` in `providers.json`.
+2. Add its id to `channels.sms.enabled-providers`.
+3. Add its secrets to `.env` and their names to `.env.example`.
 
 ```json
 "example": {
   "id": "EXAMPLE",
   "display-name": "Example",
   "channels": ["SMS"],
-  "variables": {
-    "api-key": "${EXAMPLE_API_KEY:}",
-    "from": "${EXAMPLE_SMS_FROM:}"
-  },
+  "variables": { "api-key": "${EXAMPLE_API_KEY:}", "from": "${EXAMPLE_SMS_FROM:}" },
   "request": {
     "method": "POST",
     "url": "https://api.example-sms.com/v1/send",
     "auth": { "type": "bearer", "token": "{{api-key}}" },
-    "body": {
-      "format": "json",
-      "fields": { "src": "{{from}}", "dst": "{{to}}", "text": "{{text}}" }
-    }
+    "body": { "format": "json", "fields": { "src": "{{from}}", "dst": "{{to}}", "text": "{{text}}" } }
   },
   "response": {
     "success": { "http-status": ["2xx"] },
@@ -181,44 +211,60 @@ Most providers need **no Java code**. Add a block under `messaging.http-provider
 }
 ```
 
-Then add `EXAMPLE` to `channels.sms.enabled-providers` in the same file, and its secrets to `.env`.
-
-### What each part means
+Secrets go in `variables` as `"${ENV_VAR:}"` and are used as `{{name}}`. Never write a real secret
+directly in `providers.json`.
 
 | Setting | Meaning |
 |---|---|
-| `id`, `display-name` | Id used in requests and routing; name used in error messages (defaults to the id). |
-| `channels` | Channels the provider can send, e.g. `["SMS"]`. |
-| `variables` | Secrets and settings, usually `"${ENV_VAR:}"`. Every one must have a value when the provider is enabled. |
-| `request.method`, `request.url` | `POST`, `PUT` or `PATCH`, and the URL. The URL may only use variables, never message values. |
-| `request.auth.type` | `basic` (`username`, `password`), `bearer` (`token`), `header` (`header-name`, `header-value`) or `none`. |
-| `request.body.format` | `form` or `json`. |
-| `request.body.fields` | Body fields with templates. |
-| `request.body.unicode-fields` | Extra fields added only when the text is not plain GSM-7 (Hindi, emoji, ...). |
-| `response.success.http-status` | Statuses that may mean success; default `["2xx"]`. |
-| `response.success.each`, `field`, `expected` | For replies where HTTP 200 can still mean failure: every item in the list must have `field` equal to `expected`. |
-| `response.id-path`, `status-path` | JSONPath to the message id and the provider's status. |
-| `response.error.code-path`, `message-path` | JSONPath to the error code and text. |
-| `response.retry.http-status`, `codes` | What means "try later": statuses (default `["429", "5xx"]`) and provider error codes. |
-
-Placeholders in templates:
+| `id`, `display-name` | Id used in requests and routing; name used in error messages (defaults to the id) |
+| `channels` | Channels the provider can send, e.g. `["SMS"]` |
+| `variables` | Secrets and settings; all must be filled when the provider is enabled |
+| `request.method`, `request.url` | `POST`, `PUT` or `PATCH`; the URL may only use variables, never message values |
+| `request.auth.type` | `basic` (`username`, `password`), `bearer` (`token`), `header` (`header-name`, `header-value`) or `none` |
+| `request.body.format` | `form` or `json` |
+| `request.body.fields` | Body fields and their templates |
+| `request.body.unicode-fields` | Extra fields added only for non-GSM text (Hindi, emoji) |
+| `response.success.http-status` | Statuses that may mean success; default `["2xx"]` |
+| `response.success.each`, `field`, `expected` | For replies where HTTP 200 can still be a failure: every item must have `field` equal to `expected` |
+| `response.id-path`, `status-path` | JSONPath to the message id and the provider's status |
+| `response.error.code-path`, `message-path` | JSONPath to the error code and text |
+| `response.retry.http-status`, `codes` | What means "try later": statuses (default `["429", "5xx"]`) and provider error codes |
 
 | Placeholder | Value |
 |---|---|
-| `{{to}}` | recipient in E.164 with `+`, e.g. `+919876543210` |
-| `{{to_digits}}` | recipient without `+`, e.g. `919876543210` |
+| `{{to}}` | recipient with `+`, e.g. `+91XXXXXXXXXX` |
+| `{{to_digits}}` | recipient without `+`, e.g. `91XXXXXXXXXX` |
 | `{{text}}` | message body |
 | `{{<name>}}` | any value from the block's `variables` |
 
-The `twilio` and `vonage` blocks are working examples. Vonage shows `{{to_digits}}` (it wants the
-number without `+`), `unicode-fields` (`type=unicode` for non-GSM text), `success.each` (its HTTP 200
-replies can still be failures) and `retry.codes` (`1` throttled, `5` internal error). The app checks
-every block at startup and refuses to start with a clear list of problems if one is incomplete.
-Design details: [docs/generic-http-provider-plan.md](docs/generic-http-provider-plan.md).
+The `twilio` and `vonage` blocks are complete working examples. Vonage shows how to handle a
+provider's quirks with settings only: `{{to_digits}}` (no `+`), `unicode-fields` (`type=unicode`),
+`success.each` (HTTP 200 replies that can still fail) and `retry.codes` (`1` throttled, `5`
+internal error).
 
-JSON has no comments, so this README is where the settings are explained. `providers.json` is read
-through Spring's YAML loader (`classpath:providers.json[.yaml]` in `application.properties`), which
-reads JSON as-is.
+A provider that can't be described this way (vendor SDK, JWT signing) can be a Java class that
+implements `MessageProvider` and is annotated `@Component`.
 
-A provider that cannot be described this way (vendor SDK, JWT signing) can still be a Java class
-that implements `MessageProvider` and is annotated `@Component`.
+## Project structure
+
+```text
+src/main/java/com/example/messaging_service/
+├── controller/      MessageController: POST /api/v1/messages
+├── dto/             request, response, MessageType
+├── service/         MessageService (the send flow), ProviderRegistry (owns all providers)
+├── provider/        MessageProvider interface, OutboundMessage, ProviderResult
+│   └── generic/     GenericHttpProvider engine, config model, validation, templates, reply reading
+└── exception/       error codes, MessagingException, GlobalExceptionHandler
+
+src/main/resources/
+├── providers.json            routing + provider blocks
+└── application.properties    HTTP timeouts, imports .env and providers.json
+```
+
+## Tests
+
+```bash
+./mvnw test
+```
+
+No test calls Twilio or Vonage: provider HTTP calls are mocked, and no `.env` is needed.
