@@ -153,7 +153,7 @@ class ProviderRegistryTest {
 		void failsWhenEnabledProviderHasNoCredentials() {
 			assertStartupFails(List.of(new FakeProvider("TWILIO", EnumSet.of(MessageType.SMS), false)),
 					smsConfig("TWILIO", "TWILIO"),
-					"TWILIO is enabled for SMS but its credentials are missing (messaging.providers.twilio.*)");
+					"TWILIO is enabled for SMS but its credentials are missing");
 		}
 
 		@Test

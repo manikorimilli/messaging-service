@@ -12,8 +12,8 @@ import com.example.messaging_service.dto.MessageType;
 
 /**
  * Routing per channel, bound from {@code messaging.channels.<channel>.*}. Provider credentials
- * live under {@code messaging.providers.<provider>.*} and are read by each adapter's own
- * properties class, not here.
+ * live with each provider's description ({@code messaging.http-providers.<name>.variables} in
+ * providers.json), not here.
  */
 @ConfigurationProperties("messaging")
 public record MessagingProperties(Map<String, ChannelSettings> channels) {

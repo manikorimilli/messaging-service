@@ -12,8 +12,7 @@ public interface MessageProvider {
 
 	/**
 	 * Stable upper-case provider id used in requests and config, e.g. "TWILIO". Two adapters may
-	 * share an id if they serve different channels (TwilioSmsProvider now, TwilioWhatsAppProvider
-	 * later).
+	 * share an id if they serve different channels (Twilio SMS now, Twilio WhatsApp later).
 	 */
 	String id();
 

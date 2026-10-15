@@ -22,11 +22,13 @@ import org.springframework.test.web.servlet.ResultActions;
  * The whole application with both real adapters and dummy credentials. No request here reaches
  * a provider; adapter HTTP calls are covered by the adapter tests.
  */
-@SpringBootTest(properties = { "messaging.providers.twilio.account-sid=ACtest",
-		"messaging.providers.twilio.api-key=SKtest",
-		"messaging.providers.twilio.api-secret=test-secret", "messaging.providers.twilio.sms-from=+15550001111",
-		"messaging.providers.vonage.api-key=test-key", "messaging.providers.vonage.api-secret=test-secret",
-		"messaging.providers.vonage.sms-from=MyBrand" })
+@SpringBootTest(properties = { "messaging.http-providers.twilio.variables.account-sid=ACtest",
+		"messaging.http-providers.twilio.variables.api-key=SKtest",
+		"messaging.http-providers.twilio.variables.api-secret=test-secret",
+		"messaging.http-providers.twilio.variables.from=+15550001111",
+		"messaging.http-providers.vonage.variables.api-key=test-key",
+		"messaging.http-providers.vonage.variables.api-secret=test-secret",
+		"messaging.http-providers.vonage.variables.from=MyBrand" })
 @AutoConfigureMockMvc
 class MessagingServiceApplicationTests {
 

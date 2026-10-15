@@ -136,8 +136,7 @@ public class ProviderRegistry {
 				problems.add("%s.enabled-providers contains %s, which has no adapter for %s".formatted(key, id, type));
 			}
 			else if (!provider.isConfigured()) {
-				problems.add("%s is enabled for %s but its credentials are missing (messaging.providers.%s.*)"
-					.formatted(id, type, id.toLowerCase(Locale.ROOT)));
+				problems.add("%s is enabled for %s but its credentials are missing".formatted(id, type));
 			}
 		}
 	}

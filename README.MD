@@ -7,22 +7,29 @@ Java 21, Spring Boot 4.1.
 
 ## Configure
 
-All settings are in `src/main/resources/application.properties`. Secrets come from environment
-variables:
+- `src/main/resources/application.properties`: routing (which providers are enabled, which is
+  the default) and HTTP timeouts.
+- `src/main/resources/providers.json`: one block per provider describing how to call it (URL,
+  login, body fields) and how to read its replies. See [Adding a provider](#adding-a-provider).
+
+Secrets come from environment variables, or from a local `.env` file:
+
+```bash
+cp .env.example .env
+```
+
+Then fill in `.env`. It is git-ignored. Real environment variables with the same names override it.
 
 | Variable | Used for |
 |---|---|
 | `TWILIO_ACCOUNT_SID` | Twilio Account SID, `AC...` (Console, Account info) |
 | `TWILIO_API_KEY`, `TWILIO_API_SECRET` | Twilio API key SID `SK...` and its secret (Console, API keys & tokens). For local testing you may use the Account SID and Auth Token instead. |
+| `TWILIO_SMS_FROM` | Your Twilio phone number, e.g. `+15551234567` |
 | `VONAGE_API_KEY`, `VONAGE_API_SECRET` | Vonage credentials (Dashboard, API settings) |
-| `MESSAGING_PROVIDERS_TWILIO_SMSFROM` | Your Twilio phone number, e.g. `+15551234567` |
-| `MESSAGING_PROVIDERS_VONAGE_SMSFROM` | Your Vonage number or sender name |
-
-The sender values in `application.properties` are placeholders, so set the two `SMSFROM`
-variables too.
+| `VONAGE_SMS_FROM` | Your Vonage number or sender name |
 
 The app checks the configuration at startup and refuses to start, with a clear message, when an
-enabled provider has no credentials or the routing is wrong.
+enabled provider has an empty variable, a provider block is incomplete, or the routing is wrong.
 
 ### Routing
 
@@ -135,6 +142,74 @@ The tests never call Twilio or Vonage; provider HTTP calls are mocked.
 
 ## Adding a provider
 
-Add a folder under `provider/` with an adapter that implements `MessageProvider` and a
-`@ConfigurationProperties` class, add its credentials and id to `application.properties`. No
-other code changes. See section 6 of the design.
+Most providers need **no Java code**. Add a block under `messaging.http-providers` in
+`src/main/resources/providers.json`:
+
+```json
+"example": {
+  "id": "EXAMPLE",
+  "display-name": "Example",
+  "channels": ["SMS"],
+  "variables": {
+    "api-key": "${EXAMPLE_API_KEY:}",
+    "from": "${EXAMPLE_SMS_FROM:}"
+  },
+  "request": {
+    "method": "POST",
+    "url": "https://api.example-sms.com/v1/send",
+    "auth": { "type": "bearer", "token": "{{api-key}}" },
+    "body": {
+      "format": "json",
+      "fields": { "src": "{{from}}", "dst": "{{to}}", "text": "{{text}}" }
+    }
+  },
+  "response": {
+    "success": { "http-status": ["2xx"] },
+    "id-path": "$.message_id",
+    "error": { "code-path": "$.error_code", "message-path": "$.error" },
+    "retry": { "http-status": ["429", "5xx"] }
+  }
+}
+```
+
+Then add `EXAMPLE` to `messaging.channels.sms.enabled-providers` and its secrets to `.env`.
+
+### What each part means
+
+| Setting | Meaning |
+|---|---|
+| `id`, `display-name` | Id used in requests and routing; name used in error messages (defaults to the id). |
+| `channels` | Channels the provider can send, e.g. `["SMS"]`. |
+| `variables` | Secrets and settings, usually `"${ENV_VAR:}"`. Every one must have a value when the provider is enabled. |
+| `request.method`, `request.url` | `POST`, `PUT` or `PATCH`, and the URL. The URL may only use variables, never message values. |
+| `request.auth.type` | `basic` (`username`, `password`), `bearer` (`token`), `header` (`header-name`, `header-value`) or `none`. |
+| `request.body.format` | `form` or `json`. |
+| `request.body.fields` | Body fields with templates. |
+| `request.body.unicode-fields` | Extra fields added only when the text is not plain GSM-7 (Hindi, emoji, ...). |
+| `response.success.http-status` | Statuses that may mean success; default `["2xx"]`. |
+| `response.success.each`, `field`, `expected` | For replies where HTTP 200 can still mean failure: every item in the list must have `field` equal to `expected`. |
+| `response.id-path`, `status-path` | JSONPath to the message id and the provider's status. |
+| `response.error.code-path`, `message-path` | JSONPath to the error code and text. |
+| `response.retry.http-status`, `codes` | What means "try later": statuses (default `["429", "5xx"]`) and provider error codes. |
+
+Placeholders in templates:
+
+| Placeholder | Value |
+|---|---|
+| `{{to}}` | recipient in E.164 with `+`, e.g. `+919876543210` |
+| `{{to_digits}}` | recipient without `+`, e.g. `919876543210` |
+| `{{text}}` | message body |
+| `{{<name>}}` | any value from the block's `variables` |
+
+The `twilio` and `vonage` blocks are working examples. Vonage shows `{{to_digits}}` (it wants the
+number without `+`), `unicode-fields` (`type=unicode` for non-GSM text), `success.each` (its HTTP 200
+replies can still be failures) and `retry.codes` (`1` throttled, `5` internal error). The app checks
+every block at startup and refuses to start with a clear list of problems if one is incomplete.
+Design details: [docs/generic-http-provider-plan.md](docs/generic-http-provider-plan.md).
+
+JSON has no comments, so this README is where the settings are explained. `providers.json` is read
+through Spring's YAML loader (`classpath:providers.json[.yaml]` in `application.properties`), which
+reads JSON as-is.
+
+A provider that cannot be described this way (vendor SDK, JWT signing) can still be a Java class
+that implements `MessageProvider` and is annotated `@Component`.
