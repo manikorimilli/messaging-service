@@ -54,8 +54,8 @@ class TwilioSmsProvider implements MessageProvider {
 
 	@Override
 	public boolean isConfigured() {
-		return StringUtils.hasText(props.accountSid()) && StringUtils.hasText(props.authToken())
-				&& StringUtils.hasText(props.smsFrom());
+		return StringUtils.hasText(props.accountSid()) && StringUtils.hasText(props.apiKey())
+				&& StringUtils.hasText(props.apiSecret()) && StringUtils.hasText(props.smsFrom());
 	}
 
 	@Override
@@ -67,7 +67,7 @@ class TwilioSmsProvider implements MessageProvider {
 
 		return client.post()
 			.uri("/Accounts/{accountSid}/Messages.json", props.accountSid())
-			.headers(headers -> headers.setBasicAuth(props.accountSid(), props.authToken()))
+			.headers(headers -> headers.setBasicAuth(props.apiKey(), props.apiSecret()))
 			.contentType(MediaType.APPLICATION_FORM_URLENCODED)
 			.body(form)
 			.exchange((request, response) -> {

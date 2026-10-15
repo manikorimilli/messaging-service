@@ -102,6 +102,7 @@ public class ProviderRegistry {
 			throw new MessagingException(ErrorCode.PROVIDER_UNAVAILABLE, id,
 					"Provider '%s' is currently disabled for %s.".formatted(id, type));
 		}
+		
 		return provider;
 	}
 

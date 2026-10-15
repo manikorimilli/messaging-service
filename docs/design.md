@@ -20,7 +20,7 @@
 8. [Minimal implementation plan](#8-minimal-implementation-plan)
 9. [Design decisions and trade-offs](#9-design-decisions-and-trade-offs)
 10. [Out of scope (later)](#10-out-of-scope-later)
-11. [Open questions for the reviewer](#11-open-questions-for-the-reviewer)
+    11. [Open questions for the reviewer](#11-open-questions-for-the-reviewer)
 
 ---
 

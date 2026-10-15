@@ -37,7 +37,7 @@ class TwilioSmsProviderTest {
 	private final MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
 
 	private final TwilioSmsProvider provider = new TwilioSmsProvider(builder,
-			new TwilioProperties("AC123", "secret-token", "+15550001111"));
+			new TwilioProperties("AC123", "SK456", "key-secret", "+15550001111"));
 
 	@Test
 	void postsFormWithBasicAuthAndReadsSidAndStatus() {
@@ -45,7 +45,7 @@ class TwilioSmsProviderTest {
 		form.add("To", "+919876543210");
 		form.add("From", "+15550001111");
 		form.add("Body", "Hello");
-		String basic = Base64.getEncoder().encodeToString("AC123:secret-token".getBytes(StandardCharsets.UTF_8));
+		String basic = Base64.getEncoder().encodeToString("SK456:key-secret".getBytes(StandardCharsets.UTF_8));
 
 		server.expect(requestTo(URL))
 			.andExpect(method(HttpMethod.POST))
@@ -109,7 +109,7 @@ class TwilioSmsProviderTest {
 	@Test
 	void isConfiguredOnlyWithAllThreeSettings() {
 		assertThat(provider.isConfigured()).isTrue();
-		assertThat(new TwilioSmsProvider(RestClient.builder(), new TwilioProperties("AC123", "", "+15550001111"))
+		assertThat(new TwilioSmsProvider(RestClient.builder(), new TwilioProperties("AC123", "SK456", "", "+15550001111"))
 			.isConfigured()).isFalse();
 	}
 

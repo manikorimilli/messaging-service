@@ -23,8 +23,10 @@ import org.springframework.test.web.servlet.ResultActions;
  * a provider; adapter HTTP calls are covered by the adapter tests.
  */
 @SpringBootTest(properties = { "messaging.providers.twilio.account-sid=ACtest",
-		"messaging.providers.twilio.auth-token=test-token", "messaging.providers.vonage.api-key=test-key",
-		"messaging.providers.vonage.api-secret=test-secret" })
+		"messaging.providers.twilio.api-key=SKtest",
+		"messaging.providers.twilio.api-secret=test-secret", "messaging.providers.twilio.sms-from=+15550001111",
+		"messaging.providers.vonage.api-key=test-key", "messaging.providers.vonage.api-secret=test-secret",
+		"messaging.providers.vonage.sms-from=MyBrand" })
 @AutoConfigureMockMvc
 class MessagingServiceApplicationTests {
 
