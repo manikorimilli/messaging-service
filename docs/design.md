@@ -1,5 +1,8 @@
 # Messaging Platform PoC: Design Document
 
+> **This is the v1 design** (one Java adapter per provider). The current design, with the generic
+> HTTP provider and `providers.json`, is [design-v2.md](design-v2.md).
+
 | Item | Value |
 |---|---|
 | Status | Reviewed, ready for implementation |
