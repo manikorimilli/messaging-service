@@ -7,10 +7,16 @@ Java 21, Spring Boot 4.1.
 
 ## Configure
 
-- `src/main/resources/application.properties`: routing (which providers are enabled, which is
-  the default) and HTTP timeouts.
-- `src/main/resources/providers.json`: one block per provider describing how to call it (URL,
-  login, body fields) and how to read its replies. See [Adding a provider](#adding-a-provider).
+- `src/main/resources/providers.json`: everything about providers, in one file:
+  - `channels`: routing (which providers are enabled per channel, which is the default);
+  - `http-providers`: one block per provider describing how to call it (URL, login, body fields)
+    and how to read its replies. See [Adding a provider](#adding-a-provider).
+- `src/main/resources/application.properties`: HTTP timeouts, and the import of `.env` and
+  `providers.json`.
+
+`ProviderRegistry` owns this file: it builds one provider per block, checks everything at
+startup, and can give back any registered provider's block with its secrets masked
+(`registry.description(MessageType.SMS, "TWILIO")`, `registry.descriptions(MessageType.SMS)`).
 
 Secrets come from environment variables, or from a local `.env` file:
 
@@ -33,9 +39,12 @@ enabled provider has an empty variable, a provider block is incomplete, or the r
 
 ### Routing
 
-```properties
-messaging.channels.sms.primary-provider=TWILIO
-messaging.channels.sms.enabled-providers=TWILIO,VONAGE
+In `providers.json`:
+
+```json
+"channels": {
+  "sms": { "primary-provider": "TWILIO", "enabled-providers": ["TWILIO", "VONAGE"] }
+}
 ```
 
 - Requests without `provider` use the primary. Switch it with
@@ -172,7 +181,7 @@ Most providers need **no Java code**. Add a block under `messaging.http-provider
 }
 ```
 
-Then add `EXAMPLE` to `messaging.channels.sms.enabled-providers` and its secrets to `.env`.
+Then add `EXAMPLE` to `channels.sms.enabled-providers` in the same file, and its secrets to `.env`.
 
 ### What each part means
 

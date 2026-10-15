@@ -1,45 +1,80 @@
 package com.example.messaging_service.service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestClient;
 
-import com.example.messaging_service.config.MessagingProperties;
-import com.example.messaging_service.config.MessagingProperties.ChannelSettings;
 import com.example.messaging_service.dto.MessageType;
 import com.example.messaging_service.exception.ErrorCode;
 import com.example.messaging_service.exception.MessagingException;
 import com.example.messaging_service.provider.MessageProvider;
+import com.example.messaging_service.provider.generic.GenericHttpProvider;
+import com.example.messaging_service.provider.generic.GenericHttpProvidersProperties;
+import com.example.messaging_service.provider.generic.GenericHttpProvidersProperties.ChannelSettings;
+import com.example.messaging_service.provider.generic.GenericHttpProvidersProperties.Description;
 
 /**
- * Holds every provider adapter, keyed by channel and provider id, and picks the one to use for
- * a request. Checks the configuration once at startup so a request never fails because of it.
+ * Owns every provider. Builds one {@link GenericHttpProvider} per block in providers.json, adds
+ * any hand-written {@link MessageProvider} beans, picks the one to use for a request, and gives
+ * back each provider's description. Checks the configuration once at startup so a request never
+ * fails because of it.
  */
 @Component
 public class ProviderRegistry {
 
 	private static final Logger log = LoggerFactory.getLogger(ProviderRegistry.class);
 
-	// channel -> (provider id -> adapter), e.g. SMS -> { TWILIO: ..., VONAGE: ... }
+	static final String MASK = "****";
+
+	// channel -> (provider id -> provider), e.g. SMS -> { TWILIO: ..., VONAGE: ... }
 	private final Map<MessageType, Map<String, MessageProvider>> adapters = new EnumMap<>(MessageType.class);
 
-	// Every provider id we have an adapter for, on any channel. Sorted for error messages.
+	// Every provider id we have a provider for, on any channel. Sorted for error messages.
 	private final Set<String> knownProviderIds = new TreeSet<>();
 
-	private final MessagingProperties properties;
+	private final GenericHttpProvidersProperties properties;
 
-	public ProviderRegistry(List<MessageProvider> providers, MessagingProperties properties) {
+	@Autowired
+	public ProviderRegistry(ObjectProvider<MessageProvider> handWritten, GenericHttpProvidersProperties properties,
+			RestClient.Builder builder) {
+		this(handWritten.orderedStream().toList(), properties, builder);
+	}
+
+	/**
+	 * @param handWritten providers written as Java classes (SDK, JWT, ...); usually none
+	 * @param builder Spring Boot's builder with the shared HTTP client; each provider gets a copy
+	 */
+	public ProviderRegistry(List<MessageProvider> handWritten, GenericHttpProvidersProperties properties,
+			RestClient.Builder builder) {
 		this.properties = properties;
 		List<String> problems = new ArrayList<>();
+
+		List<MessageProvider> providers = new ArrayList<>(handWritten);
+		new TreeMap<>(properties.httpProviders()).forEach((key, description) -> {
+			try {
+				providers.add(new GenericHttpProvider(key, description, builder.clone()));
+			}
+			catch (IllegalStateException e) {
+				problems.add(e.getMessage().replace("\n - ", "\n     - "));
+			}
+		});
 
 		for (MessageProvider provider : providers) {
 			if (provider.id() == null || !provider.id().equals(normalizeId(provider.id()))) {
@@ -102,8 +137,35 @@ public class ProviderRegistry {
 			throw new MessagingException(ErrorCode.PROVIDER_UNAVAILABLE, id,
 					"Provider '%s' is currently disabled for %s.".formatted(id, type));
 		}
-		
 		return provider;
+	}
+
+	/**
+	 * The providers.json block of one registered provider, with every variable value masked.
+	 * Empty when there is no such provider for the channel, or when it is a hand-written class.
+	 */
+	public Optional<Description> description(MessageType type, String id) {
+		MessageProvider provider = adapters.getOrDefault(type, Map.of()).get(normalizeId(id));
+		return (provider instanceof GenericHttpProvider generic) ? Optional.of(masked(generic.description()))
+				: Optional.empty();
+	}
+
+	/** The providers.json blocks of every registered provider for a channel, sorted by id, masked. */
+	public List<Description> descriptions(MessageType type) {
+		return adapters.getOrDefault(type, Map.of())
+			.values()
+			.stream()
+			.filter(GenericHttpProvider.class::isInstance)
+			.map(provider -> masked(((GenericHttpProvider) provider).description()))
+			.sorted(Comparator.comparing(Description::id))
+			.toList();
+	}
+
+	/** Secrets live in variables: a filled value becomes "****", an empty one stays empty. */
+	private static Description masked(Description d) {
+		Map<String, String> variables = new LinkedHashMap<>();
+		d.variables().forEach((name, value) -> variables.put(name, StringUtils.hasText(value) ? MASK : ""));
+		return new Description(d.id(), d.displayName(), d.channels(), variables, d.request(), d.response());
 	}
 
 	private void checkChannel(MessageType type, List<String> problems) {

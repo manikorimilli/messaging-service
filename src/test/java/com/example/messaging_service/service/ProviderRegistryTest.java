@@ -10,15 +10,24 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.web.client.RestClient;
 
-import com.example.messaging_service.config.MessagingProperties;
-import com.example.messaging_service.config.MessagingProperties.ChannelSettings;
 import com.example.messaging_service.dto.MessageType;
 import com.example.messaging_service.exception.ErrorCode;
 import com.example.messaging_service.exception.MessagingException;
 import com.example.messaging_service.provider.MessageProvider;
 import com.example.messaging_service.provider.OutboundMessage;
 import com.example.messaging_service.provider.ProviderResult;
+import com.example.messaging_service.provider.generic.GenericHttpProvidersProperties;
+import com.example.messaging_service.provider.generic.GenericHttpProvider;
+import com.example.messaging_service.provider.generic.GenericHttpProvidersProperties.Auth;
+import com.example.messaging_service.provider.generic.GenericHttpProvidersProperties.AuthType;
+import com.example.messaging_service.provider.generic.GenericHttpProvidersProperties.Body;
+import com.example.messaging_service.provider.generic.GenericHttpProvidersProperties.BodyFormat;
+import com.example.messaging_service.provider.generic.GenericHttpProvidersProperties.ChannelSettings;
+import com.example.messaging_service.provider.generic.GenericHttpProvidersProperties.Description;
+import com.example.messaging_service.provider.generic.GenericHttpProvidersProperties.Request;
+import com.example.messaging_service.provider.generic.GenericHttpProvidersProperties.Response;
 
 class ProviderRegistryTest {
 
@@ -32,7 +41,7 @@ class ProviderRegistryTest {
 	@Nested
 	class Resolve {
 
-		private final ProviderRegistry registry = new ProviderRegistry(List.of(TWILIO, VONAGE),
+		private final ProviderRegistry registry = registry(List.of(TWILIO, VONAGE),
 				smsConfig("TWILIO", "TWILIO", "VONAGE"));
 
 		@Test
@@ -63,7 +72,7 @@ class ProviderRegistryTest {
 
 		@Test
 		void providerNotEnabledForChannelIsUnavailable() {
-			ProviderRegistry onlyTwilioEnabled = new ProviderRegistry(List.of(TWILIO, VONAGE),
+			ProviderRegistry onlyTwilioEnabled = registry(List.of(TWILIO, VONAGE),
 					smsConfig("TWILIO", "TWILIO"));
 
 			assertThatThrownBy(() -> onlyTwilioEnabled.resolve("VONAGE", MessageType.SMS))
@@ -76,7 +85,7 @@ class ProviderRegistryTest {
 
 		@Test
 		void knownProviderWithoutAdapterForChannelIsUnsupportedMessageType() {
-			ProviderRegistry withSendGrid = new ProviderRegistry(List.of(TWILIO, SENDGRID),
+			ProviderRegistry withSendGrid = registry(List.of(TWILIO, SENDGRID),
 					smsConfig("TWILIO", "TWILIO"));
 
 			assertThatThrownBy(() -> withSendGrid.resolve("SENDGRID", MessageType.SMS))
@@ -89,7 +98,7 @@ class ProviderRegistryTest {
 
 		@Test
 		void channelWithNoAdaptersAndNoConfigIsUnsupportedMessageType() {
-			ProviderRegistry noSms = new ProviderRegistry(List.of(SENDGRID), new MessagingProperties(Map.of()));
+			ProviderRegistry noSms = registry(List.of(SENDGRID), new GenericHttpProvidersProperties(Map.of(), Map.of()));
 
 			assertThatThrownBy(() -> noSms.resolve(null, MessageType.SMS))
 				.isInstanceOfSatisfying(MessagingException.class,
@@ -104,12 +113,12 @@ class ProviderRegistryTest {
 
 		@Test
 		void validConfigurationStarts() {
-			new ProviderRegistry(List.of(TWILIO, VONAGE), smsConfig("VONAGE", "TWILIO", "VONAGE"));
+			registry(List.of(TWILIO, VONAGE), smsConfig("VONAGE", "TWILIO", "VONAGE"));
 		}
 
 		@Test
 		void disabledProviderNeedsNoCredentials() {
-			new ProviderRegistry(List.of(TWILIO, new FakeProvider("VONAGE", EnumSet.of(MessageType.SMS), false)),
+			registry(List.of(TWILIO, new FakeProvider("VONAGE", EnumSet.of(MessageType.SMS), false)),
 					smsConfig("TWILIO", "TWILIO"));
 		}
 
@@ -121,7 +130,7 @@ class ProviderRegistryTest {
 
 		@Test
 		void failsWhenChannelWithAdaptersHasNoConfigBlock() {
-			assertStartupFails(List.of(TWILIO), new MessagingProperties(Map.of()),
+			assertStartupFails(List.of(TWILIO), new GenericHttpProvidersProperties(Map.of(), Map.of()),
 					"SMS has adapters [TWILIO] but no messaging.channels.sms block");
 		}
 
@@ -164,15 +173,15 @@ class ProviderRegistryTest {
 
 		@Test
 		void reportsEveryProblemAtOnce() {
-			assertThatThrownBy(() -> new ProviderRegistry(List.of(TWILIO), smsConfig("VONAGE", "TWILLIO")))
+			assertThatThrownBy(() -> registry(List.of(TWILIO), smsConfig("VONAGE", "TWILLIO")))
 				.isInstanceOf(IllegalStateException.class)
 				.hasMessageContaining("primary-provider VONAGE has no adapter")
 				.hasMessageContaining("contains TWILLIO");
 		}
 
-		private void assertStartupFails(List<MessageProvider> providers, MessagingProperties properties,
+		private void assertStartupFails(List<MessageProvider> providers, GenericHttpProvidersProperties properties,
 				String expected) {
-			assertThatThrownBy(() -> new ProviderRegistry(providers, properties))
+			assertThatThrownBy(() -> registry(providers, properties))
 				.isInstanceOf(IllegalStateException.class)
 				.hasMessageStartingWith("Invalid messaging configuration:")
 				.hasMessageContaining(expected);
@@ -180,8 +189,96 @@ class ProviderRegistryTest {
 
 	}
 
-	private static MessagingProperties smsConfig(String primary, String... enabled) {
-		return new MessagingProperties(Map.of("sms", new ChannelSettings(primary, List.of(enabled))));
+	@Nested
+	class ProvidersFromConfig {
+
+		// Two blocks: ALPHA is enabled for SMS, BETA is described but not enabled (its secret is empty).
+		private final GenericHttpProvidersProperties config = new GenericHttpProvidersProperties(
+				Map.of("sms", new ChannelSettings("ALPHA", List.of("ALPHA"))),
+				Map.of("alpha", block("ALPHA", Map.of("token", "tok-123", "from", "+15550001111")),
+						"beta", block("BETA", Map.of("token", "", "from", "+15550002222"))));
+
+		@Test
+		void buildsOneProviderPerBlock() {
+			ProviderRegistry registry = registry(List.of(), config);
+
+			assertThat(registry.resolve(null, MessageType.SMS)).isInstanceOf(GenericHttpProvider.class)
+				.extracting(MessageProvider::id)
+				.isEqualTo("ALPHA");
+		}
+
+		@Test
+		void givesBackTheBlockWithSecretsMasked() {
+			ProviderRegistry registry = registry(List.of(), config);
+
+			Description alpha = registry.description(MessageType.SMS, "alpha").orElseThrow();
+
+			assertThat(alpha.id()).isEqualTo("ALPHA");
+			assertThat(alpha.request().url()).isEqualTo("https://api.example-sms.com/v1/send");
+			assertThat(alpha.request().body().fields()).containsEntry("dst", "{{to}}");
+			assertThat(alpha.variables()).containsEntry("token", "****").containsEntry("from", "****");
+		}
+
+		@Test
+		void emptySecretStaysEmptySoItIsVisibleAsMissing() {
+			ProviderRegistry registry = registry(List.of(), config);
+
+			assertThat(registry.description(MessageType.SMS, "BETA").orElseThrow().variables())
+				.containsEntry("token", "")
+				.containsEntry("from", "****");
+		}
+
+		@Test
+		void listsEveryBlockForAChannelSortedById() {
+			ProviderRegistry registry = registry(List.of(), config);
+
+			assertThat(registry.descriptions(MessageType.SMS)).extracting(Description::id)
+				.containsExactly("ALPHA", "BETA");
+		}
+
+		@Test
+		void handWrittenOrUnknownProviderHasNoDescription() {
+			GenericHttpProvidersProperties withHandWritten = new GenericHttpProvidersProperties(
+					Map.of("sms", new ChannelSettings("TWILIO", List.of("TWILIO"))), config.httpProviders());
+			ProviderRegistry registry = registry(List.of(TWILIO), withHandWritten);
+
+			assertThat(registry.description(MessageType.SMS, "TWILIO")).isEmpty();
+			assertThat(registry.description(MessageType.SMS, "SINCH")).isEmpty();
+			assertThat(registry.descriptions(MessageType.SMS)).extracting(Description::id)
+				.containsExactly("ALPHA", "BETA");
+		}
+
+		@Test
+		void brokenBlockIsReportedWithTheOtherStartupProblems() {
+			Description broken = new Description("GAMMA", null, EnumSet.of(MessageType.SMS), Map.of(), null, null);
+			GenericHttpProvidersProperties withBroken = new GenericHttpProvidersProperties(
+					Map.of("sms", new ChannelSettings("ALPHA", List.of("ALPHA", "GAMMA"))),
+					Map.of("alpha", config.httpProviders().get("alpha"), "gamma", broken));
+
+			assertThatThrownBy(() -> registry(List.of(), withBroken)).isInstanceOf(IllegalStateException.class)
+				.hasMessageStartingWith("Invalid messaging configuration:")
+				.hasMessageContaining("Invalid messaging.http-providers.gamma:")
+				.hasMessageContaining("request is missing")
+				.hasMessageContaining("enabled-providers contains GAMMA, which has no adapter for SMS");
+		}
+
+		private static Description block(String id, Map<String, String> variables) {
+			return new Description(id, null, EnumSet.of(MessageType.SMS), variables,
+					new Request("POST", "https://api.example-sms.com/v1/send",
+							new Auth(AuthType.BEARER, null, null, "{{token}}", null, null),
+							new Body(BodyFormat.JSON, Map.of("src", "{{from}}", "dst", "{{to}}", "text", "{{text}}"), null)),
+					new Response(null, "$.message_id", null, null, null));
+		}
+
+	}
+
+	private static ProviderRegistry registry(List<MessageProvider> providers,
+			GenericHttpProvidersProperties properties) {
+		return new ProviderRegistry(providers, properties, RestClient.builder());
+	}
+
+	private static GenericHttpProvidersProperties smsConfig(String primary, String... enabled) {
+		return new GenericHttpProvidersProperties(Map.of("sms", new ChannelSettings(primary, List.of(enabled))), Map.of());
 	}
 
 	private static FakeProvider sms(String id) {

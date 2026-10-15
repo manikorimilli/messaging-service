@@ -1,5 +1,14 @@
 {
   "messaging": {
+    "channels": {
+      "sms": {
+        "primary-provider": "TWILIO",
+        "enabled-providers": [
+          "TWILIO",
+          "VONAGE"
+        ]
+      }
+    },
     "http-providers": {
       "twilio": {
         "id": "TWILIO",

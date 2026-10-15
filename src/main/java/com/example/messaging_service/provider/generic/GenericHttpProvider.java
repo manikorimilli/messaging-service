@@ -32,9 +32,9 @@ import com.example.messaging_service.provider.generic.GenericHttpProvidersProper
 /**
  * Sends messages through any REST API described in {@code providers.json}, like a saved request in
  * Postman: the block says what to send and how to read the reply. One object per block, created
- * at startup by {@link GenericHttpProviderRegistration}.
+ * at startup by {@code ProviderRegistry}.
  */
-class GenericHttpProvider implements MessageProvider {
+public class GenericHttpProvider implements MessageProvider {
 
 	private static final Logger log = LoggerFactory.getLogger(GenericHttpProvider.class);
 
@@ -50,7 +50,7 @@ class GenericHttpProvider implements MessageProvider {
 	 * @param key the block name under {@code messaging.http-providers}, e.g. "vonage"
 	 * @throws IllegalStateException listing every problem when the description is incomplete
 	 */
-	GenericHttpProvider(String key, Description description, RestClient.Builder builder) {
+	public GenericHttpProvider(String key, Description description, RestClient.Builder builder) {
 		List<String> problems = DescriptionValidator.problems(description);
 		if (!problems.isEmpty()) {
 			throw new IllegalStateException(
@@ -66,6 +66,11 @@ class GenericHttpProvider implements MessageProvider {
 	@Override
 	public String id() {
 		return description.id();
+	}
+
+	/** The block this provider was built from, as written (variables unmasked). */
+	public Description description() {
+		return description;
 	}
 
 	@Override

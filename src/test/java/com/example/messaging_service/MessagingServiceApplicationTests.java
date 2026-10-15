@@ -18,6 +18,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import com.example.messaging_service.dto.MessageType;
+import com.example.messaging_service.provider.generic.GenericHttpProvidersProperties.Description;
+import com.example.messaging_service.service.ProviderRegistry;
+
 /**
  * The whole application with both real adapters and dummy credentials. No request here reaches
  * a provider; adapter HTTP calls are covered by the adapter tests.
@@ -41,6 +45,18 @@ class MessagingServiceApplicationTests {
 		assertThat(factoryBuilder).isInstanceOf(JdkClientHttpRequestFactoryBuilder.class);
 		assertThat(settings.connectTimeout()).isEqualTo(Duration.ofSeconds(2));
 		assertThat(settings.readTimeout()).isEqualTo(Duration.ofSeconds(10));
+	}
+
+	@Test
+	void registryGivesBackEveryProvidersJsonBlockWithSecretsMasked(@Autowired ProviderRegistry registry) {
+		assertThat(registry.descriptions(MessageType.SMS)).extracting(Description::id)
+			.containsExactly("TWILIO", "VONAGE");
+
+		Description twilio = registry.description(MessageType.SMS, "twilio").orElseThrow();
+		assertThat(twilio.request().url())
+			.isEqualTo("https://api.twilio.com/2010-04-01/Accounts/{{account-sid}}/Messages.json");
+		assertThat(twilio.variables()).containsOnlyKeys("account-sid", "api-key", "api-secret", "from")
+			.allSatisfy((name, value) -> assertThat(value).isEqualTo("****"));
 	}
 
 	@Test

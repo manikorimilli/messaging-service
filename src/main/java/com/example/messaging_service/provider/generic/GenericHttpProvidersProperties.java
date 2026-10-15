@@ -1,9 +1,12 @@
 package com.example.messaging_service.provider.generic;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -11,15 +14,53 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import com.example.messaging_service.dto.MessageType;
 
 /**
- * Provider descriptions, bound from {@code messaging.http-providers.<name>.*} (see
- * {@code providers.json}). Each description is turned into one {@link GenericHttpProvider} at
- * startup. Missing parts stay null here; {@link GenericHttpProvider} reports them at startup.
+ * Everything about providers, bound from {@code providers.json}: routing per channel
+ * ({@code messaging.channels.<channel>.*}) and one description per provider
+ * ({@code messaging.http-providers.<name>.*}). {@code ProviderRegistry} turns each description into
+ * one {@link GenericHttpProvider} at startup. Missing parts stay null here and are reported then.
  */
 @ConfigurationProperties("messaging")
-public record GenericHttpProvidersProperties(Map<String, Description> httpProviders) {
+public record GenericHttpProvidersProperties(Map<String, ChannelSettings> channels,
+		Map<String, Description> httpProviders) {
 
 	public GenericHttpProvidersProperties {
+		// Channel keys are lower case ("sms"), whatever case the config file used.
+		Map<String, ChannelSettings> normalized = new HashMap<>();
+		if (channels != null) {
+			channels.forEach((name, settings) -> normalized.put(name.toLowerCase(Locale.ROOT), settings));
+		}
+		channels = Map.copyOf(normalized);
 		httpProviders = (httpProviders == null) ? Map.of() : Map.copyOf(httpProviders);
+	}
+
+	/**
+	 * Routing for one channel, or null when the config has no block for it. The registry checks
+	 * at startup that every channel with providers has a block.
+	 */
+	public ChannelSettings channel(MessageType type) {
+		return channels.get(type.name().toLowerCase(Locale.ROOT));
+	}
+
+	/**
+	 * Which providers may send on a channel, and which one is used when a request names none.
+	 * Ids are trimmed and upper-cased, so "vonage" in the config matches the provider id "VONAGE".
+	 */
+	public record ChannelSettings(String primaryProvider, List<String> enabledProviders) {
+
+		public ChannelSettings {
+			primaryProvider = normalizeId(primaryProvider);
+			enabledProviders = (enabledProviders == null) ? List.of()
+					: enabledProviders.stream().map(ChannelSettings::normalizeId).filter(Objects::nonNull).toList();
+		}
+
+		public boolean isEnabled(String id) {
+			return enabledProviders.contains(normalizeId(id));
+		}
+
+		private static String normalizeId(String id) {
+			return (id == null || id.isBlank()) ? null : id.trim().toUpperCase(Locale.ROOT);
+		}
+
 	}
 
 	/**

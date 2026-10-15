@@ -16,8 +16,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
-import com.example.messaging_service.config.MessagingProperties;
-import com.example.messaging_service.config.MessagingProperties.ChannelSettings;
 import com.example.messaging_service.dto.MessageType;
 import com.example.messaging_service.dto.SendMessageRequest;
 import com.example.messaging_service.dto.SendMessageResponse;
@@ -26,6 +24,8 @@ import com.example.messaging_service.exception.MessagingException;
 import com.example.messaging_service.provider.MessageProvider;
 import com.example.messaging_service.provider.OutboundMessage;
 import com.example.messaging_service.provider.ProviderResult;
+import com.example.messaging_service.provider.generic.GenericHttpProvidersProperties;
+import com.example.messaging_service.provider.generic.GenericHttpProvidersProperties.ChannelSettings;
 
 class MessageServiceTest {
 
@@ -125,9 +125,9 @@ class MessageServiceTest {
 			}
 
 		};
-		MessagingProperties properties = new MessagingProperties(
-				Map.of("sms", new ChannelSettings("FAKE", List.of("FAKE"))));
-		return new MessageService(new ProviderRegistry(List.of(provider), properties));
+		GenericHttpProvidersProperties properties = new GenericHttpProvidersProperties(
+				Map.of("sms", new ChannelSettings("FAKE", List.of("FAKE"))), Map.of());
+		return new MessageService(new ProviderRegistry(List.of(provider), properties, RestClient.builder()));
 	}
 
 }
