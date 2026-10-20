@@ -1,0 +1,20 @@
+{
+  "version": "2026-10-20",
+  "groups": [
+    {
+      "provider": "TWILIO",
+      "body": "Your bill is ready",
+      "recipients": [
+        "+910000000001",
+        "+910000000002"
+      ]
+    },
+    {
+      "provider": "VONAGE",
+      "body": "Your order has shipped",
+      "recipients": [
+        "+910000000003"
+      ]
+    }
+  ]
+}

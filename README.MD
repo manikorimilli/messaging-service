@@ -1,7 +1,8 @@
 # Messaging Service
 
-One HTTP endpoint that sends an SMS through Twilio or Vonage. The design is in
-[docs/design.md](docs/design.md).
+Sends SMS through Twilio or Vonage: one number at a time, a batch of numbers, or a daily job that
+reads a file of numbers. The design is in [docs/design.md](docs/design.md); the batch feature is in
+[docs/batching-feature.md](docs/batching-feature.md).
 
 Java 21, Spring Boot 4.1.
 
@@ -106,6 +107,63 @@ Success is `202 Accepted`:
 
 `ACCEPTED` means the provider took the message, not that the phone received it. Delivery tracking
 is not part of this service yet.
+
+## Send to many numbers (batch)
+
+One body to up to 100 numbers, all through one provider:
+
+```bash
+curl -i -X POST http://localhost:8080/api/v1/messages/batch \
+  -H 'Content-Type: application/json' \
+  -d '{ "type": "SMS", "provider": "TWILIO", "recipients": ["+91XXXXXXXXXX", "+91YYYYYYYYYY"], "body": "Your bill is ready" }'
+```
+
+- `provider` is optional (the primary is used). `recipients` holds 1 to 100 E.164 numbers
+  (`messaging.batch.max-recipients`); more gives `400 VALIDATION_FAILED` and nothing is sent.
+- Numbers are sent one after another. A repeated number is sent once. A failed number is not
+  retried and does not stop the others.
+- `200 OK` means the batch ran. Check `failed` and each result:
+
+```json
+{
+  "provider": "TWILIO",
+  "total": 2,
+  "accepted": 1,
+  "failed": 1,
+  "duplicatesRemoved": 0,
+  "results": [
+    { "to": "+91XXXXXXXXXX", "status": "ACCEPTED", "providerMessageId": "SM...", "providerStatus": "queued" },
+    { "to": "+91YYYYYYYYYY", "status": "FAILED", "code": "PROVIDER_REJECTED", "providerErrorCode": "21608",
+      "detail": "Twilio rejected the message: ..." }
+  ]
+}
+```
+
+## Daily job
+
+Every day at 10:00 IST the job reads `batch-targets.json` (numbers grouped by provider, one body
+per group) and sends each group through the batch service, 100 numbers at a time. Results go to
+the logs only. It is **off by default**.
+
+```json
+{
+  "version": "2026-10-20",
+  "groups": [
+    { "provider": "TWILIO", "body": "Your bill is ready", "recipients": ["+91XXXXXXXXXX"] },
+    { "provider": "VONAGE", "body": "Your order has shipped", "recipients": ["+91YYYYYYYYYY"] }
+  ]
+}
+```
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `messaging.batch-job.enabled` | `false` | Turn the job on (`MESSAGING_BATCHJOB_ENABLED=true`) |
+| `messaging.batch-job.cron` | `0 0 10 * * *` | When it runs (second minute hour day month weekday) |
+| `messaging.batch-job.zone` | `Asia/Kolkata` | Time zone for the cron |
+| `messaging.batch-job.targets-file` | `classpath:batch-targets.json` | The file inside the project. Use `file:/path/batch-targets.json` for a file on disk that is replaced daily. |
+
+The file is read again on every run, so a replaced file is picked up without a restart. If the
+app is not running at 10:00, that day is skipped.
 
 ## Errors
 

@@ -13,7 +13,12 @@ import jakarta.validation.constraints.Size;
 public record SendMessageRequest(
 		@NotNull MessageType type,
 		String provider,
-		@NotBlank @Pattern(regexp = "^\\+[1-9]\\d{7,14}$",
-				message = "must be in E.164 format, for example +919876543210") String to,
+		@NotBlank @Pattern(regexp = SendMessageRequest.E164, message = SendMessageRequest.E164_MESSAGE) String to,
 		@NotBlank @Size(max = 1600) String body) {
+
+	/** Phone number format shared by the single and the batch API. */
+	public static final String E164 = "^\\+[1-9]\\d{7,14}$";
+
+	public static final String E164_MESSAGE = "must be in E.164 format, for example +919876543210";
+
 }
