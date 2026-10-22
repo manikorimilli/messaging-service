@@ -34,3 +34,7 @@ build/
 
 ### Local secrets ###
 .env
+
+### Providers added through the API (holds secrets) ###
+db.json
+db.json.tmp
