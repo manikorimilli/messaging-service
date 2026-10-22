@@ -28,7 +28,8 @@ import com.example.messaging_service.service.ProviderRegistry;
  * The whole application with both real adapters and dummy credentials. No request here reaches
  * a provider; adapter HTTP calls are covered by the adapter tests.
  */
-@SpringBootTest(properties = { "messaging.http-providers.twilio.variables.account-sid=ACtest",
+@SpringBootTest(properties = { "messaging.db-file=target/test-db/MessagingServiceApplicationTests.json",
+		"messaging.http-providers.twilio.variables.account-sid=ACtest",
 		"messaging.http-providers.twilio.variables.api-key=SKtest",
 		"messaging.http-providers.twilio.variables.api-secret=test-secret",
 		"messaging.http-providers.twilio.variables.from=+15550001111",

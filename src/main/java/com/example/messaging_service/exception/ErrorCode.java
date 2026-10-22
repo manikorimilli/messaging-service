@@ -13,6 +13,10 @@ public enum ErrorCode {
 	PROVIDER_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "Provider unavailable"),
 	PROVIDER_TIMEOUT(HttpStatus.GATEWAY_TIMEOUT, "Provider timeout"),
 	PROVIDER_REJECTED(HttpStatus.BAD_GATEWAY, "Provider rejected the message"),
+	PROVIDER_NOT_FOUND(HttpStatus.NOT_FOUND, "Provider not found"),
+	PROVIDER_ALREADY_EXISTS(HttpStatus.CONFLICT, "Provider already exists"),
+	PROVIDER_READ_ONLY(HttpStatus.CONFLICT, "Provider is read-only"),
+	PROVIDER_IN_USE(HttpStatus.CONFLICT, "Provider is in use"),
 	INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Internal error");
 
 	private final HttpStatus status;

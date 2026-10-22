@@ -13,7 +13,8 @@ import org.springframework.scheduling.config.ScheduledTask;
  * With the job turned on, it is registered on the configured cron. The cron here is set to a time
  * the test never reaches, so no SMS is sent.
  */
-@SpringBootTest(properties = { "messaging.batch-job.enabled=true", "messaging.batch-job.cron=0 0 3 1 1 *",
+@SpringBootTest(properties = { "messaging.db-file=target/test-db/DailySmsJobScheduleTest.json",
+		"messaging.batch-job.enabled=true", "messaging.batch-job.cron=0 0 3 1 1 *",
 		"messaging.http-providers.twilio.variables.account-sid=ACtest",
 		"messaging.http-providers.twilio.variables.api-key=SKtest",
 		"messaging.http-providers.twilio.variables.api-secret=test-secret",

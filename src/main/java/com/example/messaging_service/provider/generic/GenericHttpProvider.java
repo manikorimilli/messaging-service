@@ -63,6 +63,11 @@ public class GenericHttpProvider implements MessageProvider {
 		this.reader = new ResponseReader(description.id(), description.name(), description.response());
 	}
 
+	/** Every problem with a description; empty when it is complete. Used to check a block before saving it. */
+	public static List<String> problems(Description description) {
+		return DescriptionValidator.problems(description);
+	}
+
 	@Override
 	public String id() {
 		return description.id();
