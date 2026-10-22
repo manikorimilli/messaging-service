@@ -37,6 +37,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 		return problem;
 	}
 
+	@ExceptionHandler(InvalidProviderException.class)
+	public ProblemDetail handleInvalidProvider(InvalidProviderException e) {
+		ProblemDetail problem = problem(ErrorCode.VALIDATION_FAILED, e.getMessage());
+		problem.setProperty("problems", e.problems());
+		return problem;
+	}
+
 	@ExceptionHandler(Exception.class)
 	public ProblemDetail handleUnexpected(Exception e) {
 		log.error("Unexpected error", e);

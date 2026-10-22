@@ -177,6 +177,10 @@ Every error is `application/problem+json` with a stable `code`:
 | `PROVIDER_UNAVAILABLE` | 503 | Provider disabled, unreachable, throttled, or returned 5xx |
 | `PROVIDER_TIMEOUT` | 504 | No reply in time; the message may or may not have been sent |
 | `PROVIDER_REJECTED` | 502 | Provider refused the message (bad number, auth, trial limits) |
+| `PROVIDER_NOT_FOUND` | 404 | `/api/v1/providers/{id}`: no provider with that id |
+| `PROVIDER_ALREADY_EXISTS` | 409 | Registering an id that is already used |
+| `PROVIDER_READ_ONLY` | 409 | Changing or removing a provider from `providers.json` |
+| `PROVIDER_IN_USE` | 409 | Removing a provider named in the `providers.json` routing |
 | `INTERNAL_ERROR` | 500 | Anything unexpected; details are only in the logs |
 
 Example:
@@ -280,3 +284,52 @@ reads JSON as-is.
 
 A provider that cannot be described this way (vendor SDK, JWT signing) can still be a Java class
 that implements `MessageProvider` and is annotated `@Component`.
+
+## Managing providers through the API
+
+Providers can also be added while the app runs, with no file edits and no restart. They are kept
+in `db.json` (path: `messaging.db-file`, default `./db.json`), which is created empty on first
+start, read again at every start, and git-ignored because it holds real secrets.
+
+| Request | Does | Success |
+|---|---|---|
+| `POST /api/v1/providers` | Register a provider | `201` with `Location` |
+| `PUT /api/v1/providers/{id}` | Replace a registered provider | `200` |
+| `DELETE /api/v1/providers/{id}` | Remove a registered provider | `204` |
+| `GET /api/v1/providers` | List every provider, from both files | `200` |
+| `GET /api/v1/providers/{id}` | One provider | `200` |
+
+The body is the same block as in `providers.json`, plus `"enabled"` (missing means `false`), with
+**real values** in `variables` (`${...}` placeholders are rejected):
+
+```bash
+curl -i -X POST http://localhost:8080/api/v1/providers \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": "PLIVO",
+    "display-name": "Plivo",
+    "channels": ["SMS"],
+    "enabled": true,
+    "variables": { "auth-id": "<auth-id>", "auth-token": "<auth-token>", "from": "<plivo-number>" },
+    "request": {
+      "method": "POST",
+      "url": "https://api.plivo.com/v1/Account/{{auth-id}}/Message/",
+      "auth": { "type": "basic", "username": "{{auth-id}}", "password": "{{auth-token}}" },
+      "body": { "format": "json", "fields": { "src": "{{from}}", "dst": "{{to_digits}}", "text": "{{text}}" } }
+    },
+    "response": { "id-path": "$.message_uuid[0]", "error": { "message-path": "$.error" } }
+  }'
+```
+
+Rules:
+
+- Every block gets the same checks as `providers.json`. A broken one returns `400` with a
+  `problems` list naming every problem, and nothing is saved.
+- An enabled provider needs a value for every variable.
+- Responses mask every filled variable as `"****"`. In a `PUT`, a variable sent as `"****"`
+  keeps its stored value, so secrets do not have to be sent again.
+- Providers from `providers.json` (Twilio, Vonage) show `"read-only": true` and cannot be changed
+  or removed through the API.
+- Each change is checked, written to `db.json` (temp file, then rename), and only then used.
+- Do not edit `db.json` by hand while the app runs: the next change overwrites it.
+- These endpoints have no authentication yet. Add it before exposing the app.
