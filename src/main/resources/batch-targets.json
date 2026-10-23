@@ -5,14 +5,15 @@
       "provider": "TWILIO",
       "body": "Hello, this is your reminder message.",
       "recipients": [
-        "+919492014400"
+        "+919492014400",
+        "+919398342393"
       ]
     },
     {
       "provider": "VONAGE",
       "body": "Your order has shipped",
       "recipients": [
-        "+919398342393"
+        "+919492014400"
       ]
     }
   ]
