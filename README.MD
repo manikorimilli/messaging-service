@@ -143,7 +143,7 @@ curl -i -X POST http://localhost:8080/api/v1/messages/batch \
 
 Every day at 10:00 IST the job reads `batch-targets.json` (numbers grouped by provider, one body
 per group) and sends each group through the batch service, 100 numbers at a time. Results go to
-the logs, and every run is added to `jobHistory.json`. It is **off by default**.
+the logs, and every run is added to `jobHistory.json`. It is **on by default**, wherever the app runs.
 
 ```json
 {
@@ -157,7 +157,7 @@ the logs, and every run is added to `jobHistory.json`. It is **off by default**.
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `messaging.batch-job.enabled` | `false` | Turn the job on (`MESSAGING_BATCHJOB_ENABLED=true`) |
+| `messaging.batch-job.enabled` | `true` | Turn the job off with `MESSAGING_BATCHJOB_ENABLED=false` |
 | `messaging.batch-job.cron` | `0 0 10 * * *` | When it runs (second minute hour day month weekday) |
 | `messaging.batch-job.zone` | `Asia/Kolkata` | Time zone for the cron |
 | `messaging.batch-job.targets-file` | `classpath:batch-targets.json` | The file inside the project. Use `file:/path/batch-targets.json` for a file on disk that is replaced daily. |

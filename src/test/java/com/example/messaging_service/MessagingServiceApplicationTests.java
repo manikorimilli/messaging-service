@@ -87,8 +87,8 @@ class MessagingServiceApplicationTests {
 	}
 
 	@Test
-	void dailyJobIsOffByDefault(@Autowired ApplicationContext context) {
-		assertThat(context.getBeansOfType(DailySmsJob.class)).isEmpty();
+	void dailyJobIsOnByDefault(@Autowired ApplicationContext context) {
+		assertThat(context.getBeansOfType(DailySmsJob.class)).hasSize(1);
 	}
 
 	private ResultActions send(String json) throws Exception {
