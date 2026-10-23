@@ -21,6 +21,7 @@ class ErrorCodeTest {
 			"PROVIDER_ALREADY_EXISTS, 409",
 			"PROVIDER_READ_ONLY, 409",
 			"PROVIDER_IN_USE, 409",
+			"JOB_RUN_NOT_FOUND, 404",
 			"INTERNAL_ERROR, 500" })
 	void mapsEachCodeToItsHttpStatus(ErrorCode code, int status) {
 		assertThat(code.status().value()).isEqualTo(status);

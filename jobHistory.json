@@ -1,0 +1,343 @@
+{
+  "runs" : [ {
+    "run-id" : "aeee3d9b-568e-4d47-9167-8709f31814b6",
+    "started-at" : "2026-10-23T11:42:00.007888589+05:30",
+    "finished-at" : "2026-10-23T11:42:01.954866114+05:30",
+    "status" : "PARTIAL",
+    "targets-version" : "2026-10-20",
+    "total" : 3,
+    "accepted" : 1,
+    "failed" : 2,
+    "groups" : [ {
+      "provider" : "TWILIO",
+      "status" : "SENT",
+      "total" : 2,
+      "accepted" : 0,
+      "failed" : 2,
+      "duplicates-removed" : 0,
+      "results" : [ {
+        "to" : "+919492014400",
+        "status" : "FAILED",
+        "code" : "PROVIDER_REJECTED",
+        "provider-error-code" : "572006",
+        "detail" : "Twilio rejected the message: Invalid template name. Trial accounts can only use predefined SMS templates."
+      }, {
+        "to" : "+919398342393",
+        "status" : "FAILED",
+        "code" : "PROVIDER_REJECTED",
+        "provider-error-code" : "572006",
+        "detail" : "Twilio rejected the message: Invalid template name. Trial accounts can only use predefined SMS templates."
+      } ]
+    }, {
+      "provider" : "VONAGE",
+      "status" : "SENT",
+      "total" : 1,
+      "accepted" : 1,
+      "failed" : 0,
+      "duplicates-removed" : 0,
+      "results" : [ {
+        "to" : "+910000000003",
+        "status" : "ACCEPTED",
+        "provider-message-id" : "e7199a96-51ef-40ad-9a7e-b74580a85424",
+        "provider-status" : "0"
+      } ]
+    } ]
+  }, {
+    "run-id" : "8af537db-e4d5-4fde-a782-b299630665b4",
+    "started-at" : "2026-10-23T11:43:00.00048835+05:30",
+    "finished-at" : "2026-10-23T11:43:01.223330188+05:30",
+    "status" : "PARTIAL",
+    "targets-version" : "2026-10-20",
+    "total" : 3,
+    "accepted" : 1,
+    "failed" : 2,
+    "groups" : [ {
+      "provider" : "TWILIO",
+      "status" : "SENT",
+      "total" : 2,
+      "accepted" : 0,
+      "failed" : 2,
+      "duplicates-removed" : 0,
+      "results" : [ {
+        "to" : "+919492014400",
+        "status" : "FAILED",
+        "code" : "PROVIDER_REJECTED",
+        "provider-error-code" : "572006",
+        "detail" : "Twilio rejected the message: Invalid template name. Trial accounts can only use predefined SMS templates."
+      }, {
+        "to" : "+919398342393",
+        "status" : "FAILED",
+        "code" : "PROVIDER_REJECTED",
+        "provider-error-code" : "572006",
+        "detail" : "Twilio rejected the message: Invalid template name. Trial accounts can only use predefined SMS templates."
+      } ]
+    }, {
+      "provider" : "VONAGE",
+      "status" : "SENT",
+      "total" : 1,
+      "accepted" : 1,
+      "failed" : 0,
+      "duplicates-removed" : 0,
+      "results" : [ {
+        "to" : "+910000000003",
+        "status" : "ACCEPTED",
+        "provider-message-id" : "49ff1210-6d9c-4bf8-a397-ffd4b2634a82",
+        "provider-status" : "0"
+      } ]
+    } ]
+  }, {
+    "run-id" : "651705a9-b515-4a1b-be55-42f59336f1a0",
+    "started-at" : "2026-10-23T11:44:00.000449783+05:30",
+    "finished-at" : "2026-10-23T11:44:01.112739603+05:30",
+    "status" : "PARTIAL",
+    "targets-version" : "2026-10-20",
+    "total" : 3,
+    "accepted" : 1,
+    "failed" : 2,
+    "groups" : [ {
+      "provider" : "TWILIO",
+      "status" : "SENT",
+      "total" : 2,
+      "accepted" : 0,
+      "failed" : 2,
+      "duplicates-removed" : 0,
+      "results" : [ {
+        "to" : "+919492014400",
+        "status" : "FAILED",
+        "code" : "PROVIDER_REJECTED",
+        "provider-error-code" : "572006",
+        "detail" : "Twilio rejected the message: Invalid template name. Trial accounts can only use predefined SMS templates."
+      }, {
+        "to" : "+919398342393",
+        "status" : "FAILED",
+        "code" : "PROVIDER_REJECTED",
+        "provider-error-code" : "572006",
+        "detail" : "Twilio rejected the message: Invalid template name. Trial accounts can only use predefined SMS templates."
+      } ]
+    }, {
+      "provider" : "VONAGE",
+      "status" : "SENT",
+      "total" : 1,
+      "accepted" : 1,
+      "failed" : 0,
+      "duplicates-removed" : 0,
+      "results" : [ {
+        "to" : "+910000000003",
+        "status" : "ACCEPTED",
+        "provider-message-id" : "96f8c5a3-1854-4960-9f46-6d4fba2ddb74",
+        "provider-status" : "0"
+      } ]
+    } ]
+  }, {
+    "run-id" : "b8f535ec-17dd-47f8-bfda-e17763225f1f",
+    "started-at" : "2026-10-23T11:45:00.000495747+05:30",
+    "finished-at" : "2026-10-23T11:45:01.181808231+05:30",
+    "status" : "PARTIAL",
+    "targets-version" : "2026-10-20",
+    "total" : 3,
+    "accepted" : 1,
+    "failed" : 2,
+    "groups" : [ {
+      "provider" : "TWILIO",
+      "status" : "SENT",
+      "total" : 2,
+      "accepted" : 0,
+      "failed" : 2,
+      "duplicates-removed" : 0,
+      "results" : [ {
+        "to" : "+919492014400",
+        "status" : "FAILED",
+        "code" : "PROVIDER_REJECTED",
+        "provider-error-code" : "572006",
+        "detail" : "Twilio rejected the message: Invalid template name. Trial accounts can only use predefined SMS templates."
+      }, {
+        "to" : "+919398342393",
+        "status" : "FAILED",
+        "code" : "PROVIDER_REJECTED",
+        "provider-error-code" : "572006",
+        "detail" : "Twilio rejected the message: Invalid template name. Trial accounts can only use predefined SMS templates."
+      } ]
+    }, {
+      "provider" : "VONAGE",
+      "status" : "SENT",
+      "total" : 1,
+      "accepted" : 1,
+      "failed" : 0,
+      "duplicates-removed" : 0,
+      "results" : [ {
+        "to" : "+910000000003",
+        "status" : "ACCEPTED",
+        "provider-message-id" : "9fb17cb1-c727-4dbe-9001-6f09b2b47c2e",
+        "provider-status" : "0"
+      } ]
+    } ]
+  }, {
+    "run-id" : "3c67c12a-b1b3-4fd9-98fe-1bfdf1e706a1",
+    "started-at" : "2026-10-23T11:46:00.000373735+05:30",
+    "finished-at" : "2026-10-23T11:46:01.044800424+05:30",
+    "status" : "PARTIAL",
+    "targets-version" : "2026-10-20",
+    "total" : 3,
+    "accepted" : 1,
+    "failed" : 2,
+    "groups" : [ {
+      "provider" : "TWILIO",
+      "status" : "SENT",
+      "total" : 2,
+      "accepted" : 0,
+      "failed" : 2,
+      "duplicates-removed" : 0,
+      "results" : [ {
+        "to" : "+919492014400",
+        "status" : "FAILED",
+        "code" : "PROVIDER_REJECTED",
+        "provider-error-code" : "572006",
+        "detail" : "Twilio rejected the message: Invalid template name. Trial accounts can only use predefined SMS templates."
+      }, {
+        "to" : "+919398342393",
+        "status" : "FAILED",
+        "code" : "PROVIDER_REJECTED",
+        "provider-error-code" : "572006",
+        "detail" : "Twilio rejected the message: Invalid template name. Trial accounts can only use predefined SMS templates."
+      } ]
+    }, {
+      "provider" : "VONAGE",
+      "status" : "SENT",
+      "total" : 1,
+      "accepted" : 1,
+      "failed" : 0,
+      "duplicates-removed" : 0,
+      "results" : [ {
+        "to" : "+910000000003",
+        "status" : "ACCEPTED",
+        "provider-message-id" : "62aca8b5-65ec-4205-8720-8075408a6fdc",
+        "provider-status" : "0"
+      } ]
+    } ]
+  }, {
+    "run-id" : "e74fe903-455b-4ac5-85eb-95ddbe420a78",
+    "started-at" : "2026-10-23T11:47:00.000399941+05:30",
+    "finished-at" : "2026-10-23T11:47:01.336490433+05:30",
+    "status" : "PARTIAL",
+    "targets-version" : "2026-10-20",
+    "total" : 3,
+    "accepted" : 1,
+    "failed" : 2,
+    "groups" : [ {
+      "provider" : "TWILIO",
+      "status" : "SENT",
+      "total" : 2,
+      "accepted" : 0,
+      "failed" : 2,
+      "duplicates-removed" : 0,
+      "results" : [ {
+        "to" : "+919492014400",
+        "status" : "FAILED",
+        "code" : "PROVIDER_REJECTED",
+        "provider-error-code" : "572006",
+        "detail" : "Twilio rejected the message: Invalid template name. Trial accounts can only use predefined SMS templates."
+      }, {
+        "to" : "+919398342393",
+        "status" : "FAILED",
+        "code" : "PROVIDER_REJECTED",
+        "provider-error-code" : "572006",
+        "detail" : "Twilio rejected the message: Invalid template name. Trial accounts can only use predefined SMS templates."
+      } ]
+    }, {
+      "provider" : "VONAGE",
+      "status" : "SENT",
+      "total" : 1,
+      "accepted" : 1,
+      "failed" : 0,
+      "duplicates-removed" : 0,
+      "results" : [ {
+        "to" : "+910000000003",
+        "status" : "ACCEPTED",
+        "provider-message-id" : "6bfdbd7f-af4c-4881-bc6b-4810f2d43da3",
+        "provider-status" : "0"
+      } ]
+    } ]
+  }, {
+    "run-id" : "def62e7b-c00b-4ba0-a6f5-eb60bd5aae3a",
+    "started-at" : "2026-10-23T12:28:00.003767041+05:30",
+    "finished-at" : "2026-10-23T12:28:02.35342471+05:30",
+    "status" : "COMPLETED",
+    "targets-version" : "2026-10-20",
+    "total" : 3,
+    "accepted" : 3,
+    "failed" : 0,
+    "groups" : [ {
+      "provider" : "TWILIO",
+      "status" : "SENT",
+      "total" : 2,
+      "accepted" : 2,
+      "failed" : 0,
+      "duplicates-removed" : 0,
+      "results" : [ {
+        "to" : "+919492014400",
+        "status" : "ACCEPTED",
+        "provider-message-id" : "SM38f23a3745c411c3da4076e4841a998e",
+        "provider-status" : "queued"
+      }, {
+        "to" : "+919398342393",
+        "status" : "ACCEPTED",
+        "provider-message-id" : "SM0dad117b276d56eb3e09fc9ff330e8c5",
+        "provider-status" : "queued"
+      } ]
+    }, {
+      "provider" : "VONAGE",
+      "status" : "SENT",
+      "total" : 1,
+      "accepted" : 1,
+      "failed" : 0,
+      "duplicates-removed" : 0,
+      "results" : [ {
+        "to" : "+919492014400",
+        "status" : "ACCEPTED",
+        "provider-message-id" : "dc6fbc40-73c1-4a19-9900-5b5429668307",
+        "provider-status" : "0"
+      } ]
+    } ]
+  }, {
+    "run-id" : "7e8469a8-ab82-4e58-9553-4ee8475c93d1",
+    "started-at" : "2026-10-23T12:29:00.000380472+05:30",
+    "finished-at" : "2026-10-23T12:29:01.518723743+05:30",
+    "status" : "COMPLETED",
+    "targets-version" : "2026-10-20",
+    "total" : 3,
+    "accepted" : 3,
+    "failed" : 0,
+    "groups" : [ {
+      "provider" : "TWILIO",
+      "status" : "SENT",
+      "total" : 2,
+      "accepted" : 2,
+      "failed" : 0,
+      "duplicates-removed" : 0,
+      "results" : [ {
+        "to" : "+919492014400",
+        "status" : "ACCEPTED",
+        "provider-message-id" : "SMf5e133be0d833d88fd3d271d5fa7de86",
+        "provider-status" : "queued"
+      }, {
+        "to" : "+919398342393",
+        "status" : "ACCEPTED",
+        "provider-message-id" : "SMeeb2f6adf38da72edbde32160655e850",
+        "provider-status" : "queued"
+      } ]
+    }, {
+      "provider" : "VONAGE",
+      "status" : "SENT",
+      "total" : 1,
+      "accepted" : 1,
+      "failed" : 0,
+      "duplicates-removed" : 0,
+      "results" : [ {
+        "to" : "+919492014400",
+        "status" : "ACCEPTED",
+        "provider-message-id" : "8f5c077a-4095-4d22-96f4-83a8307f9649",
+        "provider-status" : "0"
+      } ]
+    } ]
+  } ]
+}

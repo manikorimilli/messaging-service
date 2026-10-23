@@ -3,17 +3,17 @@
   "groups": [
     {
       "provider": "TWILIO",
-      "body": "Your bill is ready",
+      "body": "sms_2fa",
       "recipients": [
-        "+910000000001",
-        "+910000000002"
+        "+919492014400",
+        "+919398342393"
       ]
     },
     {
       "provider": "VONAGE",
       "body": "Your order has shipped",
       "recipients": [
-        "+910000000003"
+        "+919492014400"
       ]
     }
   ]

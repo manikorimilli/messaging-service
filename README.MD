@@ -166,6 +166,15 @@ the logs, and every run is added to `jobHistory.json`. It is **off by default**.
 The file is read again on every run, so a replaced file is picked up without a restart. If the
 app is not running at 10:00, that day is skipped.
 
+### Job history API
+
+Read-only. `jobHistory.json` is read on every call, so a run shows up as soon as the job finishes.
+
+| Endpoint | Returns |
+|---|---|
+| `GET /api/v1/job-runs` | Every run, newest first: totals per run and per group, without the per-number `results`. `[]` before the first run. |
+| `GET /api/v1/job-runs/{runId}` | One run with every number's result, or 404 `JOB_RUN_NOT_FOUND` |
+
 ## Errors
 
 Every error is `application/problem+json` with a stable `code`:
@@ -182,6 +191,7 @@ Every error is `application/problem+json` with a stable `code`:
 | `PROVIDER_ALREADY_EXISTS` | 409 | Registering an id that is already used |
 | `PROVIDER_READ_ONLY` | 409 | Changing or removing a provider from `providers.json` |
 | `PROVIDER_IN_USE` | 409 | Removing a provider named in the `providers.json` routing |
+| `JOB_RUN_NOT_FOUND` | 404 | `/api/v1/job-runs/{runId}`: no run with that id |
 | `INTERNAL_ERROR` | 500 | Anything unexpected; details are only in the logs |
 
 Example:
