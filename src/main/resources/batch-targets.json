@@ -5,15 +5,14 @@
       "provider": "TWILIO",
       "body": "sms_2fa",
       "recipients": [
-        "+919492014400",
-        "+919398342393"
+        "+919492014400"
       ]
     },
     {
       "provider": "VONAGE",
       "body": "Your order has shipped",
       "recipients": [
-        "+919492014400"
+        "+919398342393"
       ]
     }
   ]
