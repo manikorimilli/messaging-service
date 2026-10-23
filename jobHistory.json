@@ -339,5 +339,113 @@
         "provider-status" : "0"
       } ]
     } ]
+  }, {
+    "run-id" : "408f20ac-b250-4cd9-a929-328f5c142984",
+    "started-at" : "2026-10-23T13:00:00.022227002+05:30",
+    "finished-at" : "2026-10-23T13:00:02.004524399+05:30",
+    "status" : "COMPLETED",
+    "targets-version" : "2026-10-20",
+    "total" : 2,
+    "accepted" : 2,
+    "failed" : 0,
+    "groups" : [ {
+      "provider" : "TWILIO",
+      "status" : "SENT",
+      "total" : 1,
+      "accepted" : 1,
+      "failed" : 0,
+      "duplicates-removed" : 0,
+      "results" : [ {
+        "to" : "+919492014400",
+        "status" : "ACCEPTED",
+        "provider-message-id" : "SMc52c57ff04558dfdfa1c39f0656c1bc5",
+        "provider-status" : "queued"
+      } ]
+    }, {
+      "provider" : "VONAGE",
+      "status" : "SENT",
+      "total" : 1,
+      "accepted" : 1,
+      "failed" : 0,
+      "duplicates-removed" : 0,
+      "results" : [ {
+        "to" : "+919398342393",
+        "status" : "ACCEPTED",
+        "provider-message-id" : "b9fdb303-4ba3-4e64-b09b-f62b822182d3",
+        "provider-status" : "0"
+      } ]
+    } ]
+  }, {
+    "run-id" : "abaee9ea-ac45-4a48-92db-75270005cc4f",
+    "started-at" : "2026-10-23T15:34:11.607878959+05:30",
+    "finished-at" : "2026-10-23T15:34:13.161814902+05:30",
+    "status" : "COMPLETED",
+    "targets-version" : "2026-10-20",
+    "total" : 2,
+    "accepted" : 2,
+    "failed" : 0,
+    "groups" : [ {
+      "provider" : "TWILIO",
+      "status" : "SENT",
+      "total" : 1,
+      "accepted" : 1,
+      "failed" : 0,
+      "duplicates-removed" : 0,
+      "results" : [ {
+        "to" : "+919492014400",
+        "status" : "ACCEPTED",
+        "provider-message-id" : "SM1a4fdb4049367d4b56083e32da98f3f3",
+        "provider-status" : "queued"
+      } ]
+    }, {
+      "provider" : "VONAGE",
+      "status" : "SENT",
+      "total" : 1,
+      "accepted" : 1,
+      "failed" : 0,
+      "duplicates-removed" : 0,
+      "results" : [ {
+        "to" : "+919398342393",
+        "status" : "ACCEPTED",
+        "provider-message-id" : "b2339991-082c-4f05-8285-6ebd6eac1fd0",
+        "provider-status" : "0"
+      } ]
+    } ]
+  }, {
+    "run-id" : "b45e49c9-f574-4199-9fac-d6834cf9340e",
+    "started-at" : "2026-10-23T16:00:00.000324744+05:30",
+    "finished-at" : "2026-10-23T16:00:01.329825009+05:30",
+    "status" : "COMPLETED",
+    "targets-version" : "2026-10-20",
+    "total" : 2,
+    "accepted" : 2,
+    "failed" : 0,
+    "groups" : [ {
+      "provider" : "TWILIO",
+      "status" : "SENT",
+      "total" : 1,
+      "accepted" : 1,
+      "failed" : 0,
+      "duplicates-removed" : 0,
+      "results" : [ {
+        "to" : "+919492014400",
+        "status" : "ACCEPTED",
+        "provider-message-id" : "SM05671deff0cd8dfba900f4562f3d2897",
+        "provider-status" : "queued"
+      } ]
+    }, {
+      "provider" : "VONAGE",
+      "status" : "SENT",
+      "total" : 1,
+      "accepted" : 1,
+      "failed" : 0,
+      "duplicates-removed" : 0,
+      "results" : [ {
+        "to" : "+919398342393",
+        "status" : "ACCEPTED",
+        "provider-message-id" : "726e7594-741e-4926-a917-278664fcc1d2",
+        "provider-status" : "0"
+      } ]
+    } ]
   } ]
 }

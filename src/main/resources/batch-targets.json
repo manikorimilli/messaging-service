@@ -3,7 +3,7 @@
   "groups": [
     {
       "provider": "TWILIO",
-      "body": "sms_2fa",
+      "body": "Hello, this is your reminder message.",
       "recipients": [
         "+919492014400"
       ]
