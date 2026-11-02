@@ -1,6 +1,7 @@
 package com.example.messaging_service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -84,6 +85,19 @@ class MessagingServiceApplicationTests {
 		mvc.perform(post("/api/v1/messages/batch").contentType(MediaType.APPLICATION_JSON).content("""
 				{ "type": "SMS", "provider": "SINCH", "recipients": ["+910000000001"], "body": "Hi" }
 				""")).andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("UNSUPPORTED_PROVIDER"));
+	}
+
+	@Test
+	void healthCheckIsUpWithoutDetails() throws Exception {
+		mvc.perform(get("/actuator/health"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.status").value("UP"))
+			.andExpect(jsonPath("$.components").doesNotExist());
+	}
+
+	@Test
+	void otherActuatorEndpointsAreNotExposed() throws Exception {
+		mvc.perform(get("/actuator/env")).andExpect(status().isNotFound());
 	}
 
 	@Test

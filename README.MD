@@ -175,6 +175,16 @@ Read-only. `jobHistory.json` is read on every call, so a run shows up as soon as
 | `GET /api/v1/job-runs` | Every run, newest first: totals per run and per group, without the per-number `results`. `[]` before the first run. |
 | `GET /api/v1/job-runs/{runId}` | One run with every number's result, or 404 `JOB_RUN_NOT_FOUND` |
 
+## Health check
+
+`GET /actuator/health` returns HTTP 200 with `"status":"UP"` while the app is running. It shows no details,
+and no other actuator endpoint is exposed. On Azure, set it as the health check path
+(App Service, Monitoring, Health check) so a stuck instance is restarted.
+
+```bash
+curl -i http://localhost:8080/actuator/health
+```
+
 ## Errors
 
 Every error is `application/problem+json` with a stable `code`:
