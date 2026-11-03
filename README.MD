@@ -175,6 +175,26 @@ Read-only. `jobHistory.json` is read on every call, so a run shows up as soon as
 | `GET /api/v1/job-runs` | Every run, newest first: totals per run and per group, without the per-number `results`. `[]` before the first run. |
 | `GET /api/v1/job-runs/{runId}` | One run with every number's result, or 404 `JOB_RUN_NOT_FOUND` |
 
+## Rate limiting
+
+`POST /api/v1/messages` and `POST /api/v1/messages/batch` allow at most 100 SMS per minute per
+caller (the client IP for now). The allowance refills evenly over the minute. A batch counts every
+unique number, and a request over the limit sends nothing. The daily job is not limited.
+
+Over the limit the API answers `429` with a `Retry-After` header (seconds):
+
+```json
+{ "title": "Too many requests", "status": 429, "code": "RATE_LIMITED",
+  "detail": "Rate limit is 100 SMS per minute. Try again in 12 seconds." }
+```
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `messaging.rate-limit.enabled` | `true` | Turn the limit off (`MESSAGING_RATELIMIT_ENABLED=false`) |
+| `messaging.rate-limit.sms-per-minute` | `100` | SMS per minute per caller (`MESSAGING_RATELIMIT_SMSPERMINUTE`) |
+
+The counters live in memory: they reset on restart, and each running copy of the app counts on its own.
+
 ## Health check
 
 `GET /actuator/health` returns HTTP 200 with `"status":"UP"` while the app is running. It shows no details,
@@ -202,6 +222,7 @@ Every error is `application/problem+json` with a stable `code`:
 | `PROVIDER_READ_ONLY` | 409 | Changing or removing a provider from `providers.json` |
 | `PROVIDER_IN_USE` | 409 | Removing a provider named in the `providers.json` routing |
 | `JOB_RUN_NOT_FOUND` | 404 | `/api/v1/job-runs/{runId}`: no run with that id |
+| `RATE_LIMITED` | 429 | More SMS per minute than the rate limit allows; see `Retry-After` |
 | `INTERNAL_ERROR` | 500 | Anything unexpected; details are only in the logs |
 
 Example:
