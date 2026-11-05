@@ -39,6 +39,7 @@ import com.example.messaging_service.exception.ErrorCode;
 import com.example.messaging_service.exception.MessagingException;
 import com.example.messaging_service.service.BatchMessageService;
 import com.example.messaging_service.service.MessageService;
+import com.example.messaging_service.service.RateLimiter;
 
 @WebMvcTest(MessageController.class)
 class MessageControllerTest {
@@ -55,6 +56,9 @@ class MessageControllerTest {
 
 	@MockitoBean
 	private BatchMessageService batchService;
+
+	@MockitoBean
+	private RateLimiter rateLimiter;
 
 	@Test
 	void acceptedMessageReturns202WithBody() throws Exception {

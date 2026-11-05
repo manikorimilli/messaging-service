@@ -18,6 +18,7 @@ public enum ErrorCode {
 	PROVIDER_READ_ONLY(HttpStatus.CONFLICT, "Provider is read-only"),
 	PROVIDER_IN_USE(HttpStatus.CONFLICT, "Provider is in use"),
 	JOB_RUN_NOT_FOUND(HttpStatus.NOT_FOUND, "Job run not found"),
+	RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, "Too many requests"),
 	INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Internal error");
 
 	private final HttpStatus status;

@@ -37,6 +37,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 		return problem;
 	}
 
+	@ExceptionHandler(RateLimitedException.class)
+	public ResponseEntity<ProblemDetail> handleRateLimited(RateLimitedException e) {
+		ResponseEntity.BodyBuilder response = ResponseEntity.status(e.code().status());
+		if (e.retryAfterSeconds() != null) {
+			response.header(HttpHeaders.RETRY_AFTER, String.valueOf(e.retryAfterSeconds()));
+		}
+		return response.body(problem(e.code(), e.getMessage()));
+	}
+
 	@ExceptionHandler(InvalidProviderException.class)
 	public ProblemDetail handleInvalidProvider(InvalidProviderException e) {
 		ProblemDetail problem = problem(ErrorCode.VALIDATION_FAILED, e.getMessage());
