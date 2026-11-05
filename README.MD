@@ -89,21 +89,11 @@ copy .env.example .env
 
 ### 4. Paste in the values you received
 
-Open `.env` in any editor and fill in each setting with the value you received. All seven must
-have a value, or the app refuses to start.
+Open `.env` in any editor. It has every setting the app needs, copied from `.env.example`, each
+with an empty value. Fill in every one with the value you received. Every setting must have a
+value, or the app refuses to start.
 
-```properties
-TWILIO_ACCOUNT_SID=
-TWILIO_API_KEY=
-TWILIO_API_SECRET=
-TWILIO_SMS_FROM=
-VONAGE_API_KEY=
-VONAGE_API_SECRET=
-VONAGE_SMS_FROM=
-```
-
-- Put each value right after its `=` sign, with no spaces and no quotes, for example
-  `TWILIO_SMS_FROM=+15551234567`.
+- Put each value right after its `=` sign, with no spaces and no quotes.
 - Keep the setting names exactly as they are. Save the file when you are done.
 - If you received a complete `.env` file, you can use it instead: put it in the
   `messaging-service` folder in place of the one from step 3.
@@ -168,7 +158,7 @@ status `29`).
 
 | You see | Fix |
 |---|---|
-| `TWILIO is enabled for SMS but its credentials are missing` | `.env` is missing, is not in the project folder, or has an empty value. Paste in all seven values you received (step 4). |
+| `TWILIO is enabled for SMS but its credentials are missing` | `.env` is missing, is not in the project folder, or has an empty value. Fill in every setting from `.env.example` (step 4). |
 | `Port 8080 was already in use` | Another program uses port 8080. Stop that program, then start the app again. |
 | `java: command not found`, or an error about release 21 | Install Java (step 1) and open a new terminal. `java -version` must show 21 or higher. |
 | `JAVA_HOME is not defined correctly` (Windows) | Open a new terminal after installing Java. If it still appears, set `JAVA_HOME` to the Java folder, for example `C:\Program Files\Eclipse Adoptium\jdk-21...`. |
