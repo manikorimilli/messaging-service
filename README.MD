@@ -6,6 +6,176 @@ reads a file of numbers. The design is in [docs/design.md](docs/design.md); the 
 
 Java 21, Spring Boot 4.1.
 
+## Local setup
+
+Follow these steps to run the service on your computer. It takes about 15 minutes the first time.
+
+What you need:
+
+- **Java 21 or newer (JDK).** Install commands are in step 1.
+- **Git**, to download the code. Install commands are in step 1.
+- **The `.env` values**: the Twilio and Vonage keys. You receive these separately.
+
+You don't need to install Maven. The project includes its own Maven (`mvnw`), which downloads
+itself on first use.
+
+### 1. Install Java and Git
+
+Skip this step if `java -version` already shows 21 or higher and `git --version` works.
+
+macOS (with Homebrew). If you don't have Homebrew yet, install it first:
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+Then install Java 21 and Git:
+
+```bash
+brew install --cask temurin@21
+brew install git
+```
+
+Linux:
+
+```bash
+sudo apt update
+sudo apt install -y openjdk-21-jdk git
+```
+
+Windows (PowerShell or Command Prompt):
+
+```powershell
+winget install --id EclipseAdoptium.Temurin.21.JDK -e
+winget install --id Git.Git -e
+```
+
+Close the terminal and open a new one after installing, so it finds Java and Git. Then check
+(all systems):
+
+```bash
+java -version
+git --version
+```
+
+`java -version` must show version 21 or higher, for example `openjdk version "21.0.5"`.
+
+### 2. Download the code
+
+```bash
+git clone https://github.com/manikorimilli/messaging-service.git
+cd messaging-service
+```
+
+Run every command below from this `messaging-service` folder.
+
+### 3. Create your settings file
+
+Copy the example file to a new file named `.env` in the same folder.
+
+macOS / Linux:
+
+```bash
+cp .env.example .env
+```
+
+Windows:
+
+```powershell
+copy .env.example .env
+```
+
+`.env` holds your secret keys. It is ignored by Git. Never commit it or share it.
+
+### 4. Paste in the values you received
+
+Open `.env` in any editor and fill in each setting with the value you received. All seven must
+have a value, or the app refuses to start.
+
+```properties
+TWILIO_ACCOUNT_SID=
+TWILIO_API_KEY=
+TWILIO_API_SECRET=
+TWILIO_SMS_FROM=
+VONAGE_API_KEY=
+VONAGE_API_SECRET=
+VONAGE_SMS_FROM=
+```
+
+- Put each value right after its `=` sign, with no spaces and no quotes, for example
+  `TWILIO_SMS_FROM=+15551234567`.
+- Keep the setting names exactly as they are. Save the file when you are done.
+- If you received a complete `.env` file, you can use it instead: put it in the
+  `messaging-service` folder in place of the one from step 3.
+
+What each variable is for is in [Configure](#configure).
+
+### 5. Start the app
+
+macOS / Linux:
+
+```bash
+./mvnw spring-boot:run
+```
+
+Windows:
+
+```powershell
+.\mvnw.cmd spring-boot:run
+```
+
+The first start downloads the libraries and can take a few minutes. The app is ready when the log
+shows a line like `Started MessagingServiceApplication in 3.5 seconds`.
+
+It runs at `http://localhost:8080`. Keep this terminal open. To stop the app, press `Ctrl + C`
+in it.
+
+### 6. Check that it works
+
+Open <http://localhost:8080/actuator/health> in your browser. You should see `"status":"UP"`.
+
+Then open the API documentation, where you can see and try every endpoint:
+<http://localhost:8080/swagger-ui.html>
+
+### 7. Send a test SMS
+
+Open a second terminal and run this, with your own phone number in international format in place
+of `+91XXXXXXXXXX`.
+
+macOS / Linux:
+
+```bash
+curl -i -X POST http://localhost:8080/api/v1/messages \
+  -H "Content-Type: application/json" \
+  -d '{ "type": "SMS", "to": "+91XXXXXXXXXX", "body": "sms_internal_alerts" }'
+```
+
+Windows: use Swagger instead. Open <http://localhost:8080/swagger-ui.html>, choose
+`POST /api/v1/messages`, click **Try it out**, paste the body below with your number, and click
+**Execute**.
+
+```json
+{ "type": "SMS", "to": "+91XXXXXXXXXX", "body": "sms_internal_alerts" }
+```
+
+`202 Accepted` means the provider took the message.
+
+Trial accounts: a Twilio trial only sends to numbers verified in your Twilio Console (others fail
+with error `21608`). Vonage demo mode only sends to whitelisted test numbers (others fail with
+status `29`).
+
+### If something goes wrong
+
+| You see | Fix |
+|---|---|
+| `TWILIO is enabled for SMS but its credentials are missing` | `.env` is missing, is not in the project folder, or has an empty value. Paste in all seven values you received (step 4). |
+| `Port 8080 was already in use` | Another program uses port 8080. Stop that program, then start the app again. |
+| `java: command not found`, or an error about release 21 | Install Java (step 1) and open a new terminal. `java -version` must show 21 or higher. |
+| `JAVA_HOME is not defined correctly` (Windows) | Open a new terminal after installing Java. If it still appears, set `JAVA_HOME` to the Java folder, for example `C:\Program Files\Eclipse Adoptium\jdk-21...`. |
+| `permission denied: ./mvnw` | Run `chmod +x mvnw` once. |
+| `502 PROVIDER_REJECTED` with `Authentication Error` | A value in `.env` was not copied correctly. Check it against the values you received, with no extra spaces. |
+| Error `21608` or status `29` | Trial or demo account: verify or whitelist the phone number with the provider. |
+
 ## Configure
 
 - `src/main/resources/providers.json`: everything about providers, in one file:
@@ -19,13 +189,9 @@ Java 21, Spring Boot 4.1.
 startup, and can give back any registered provider's block with its secrets masked
 (`registry.description(MessageType.SMS, "TWILIO")`, `registry.descriptions(MessageType.SMS)`).
 
-Secrets come from environment variables, or from a local `.env` file:
-
-```bash
-cp .env.example .env
-```
-
-Then fill in `.env`. It is git-ignored. Real environment variables with the same names override it.
+Secrets come from environment variables, or from a local `.env` file (see
+[Local setup](#local-setup), steps 3 and 4). `.env` is git-ignored. Real environment variables with
+the same names override it.
 
 | Variable | Used for |
 |---|---|
@@ -52,21 +218,6 @@ In `providers.json`:
   `MESSAGING_CHANNELS_SMS_PRIMARYPROVIDER=VONAGE`, no code change.
 - To use only Twilio, set `MESSAGING_CHANNELS_SMS_ENABLEDPROVIDERS=TWILIO`. Vonage then needs no
   credentials, and requests that name it get `503 PROVIDER_UNAVAILABLE`.
-
-## Run
-
-```bash
-export TWILIO_ACCOUNT_SID=AC...
-export TWILIO_API_KEY=SK...
-export TWILIO_API_SECRET=...
-export MESSAGING_PROVIDERS_TWILIO_SMSFROM=+1...
-export VONAGE_API_KEY=...
-export VONAGE_API_SECRET=...
-export MESSAGING_PROVIDERS_VONAGE_SMSFROM=...
-./mvnw spring-boot:run
-```
-
-The service listens on `http://localhost:8080`.
 
 ## Send a message
 
