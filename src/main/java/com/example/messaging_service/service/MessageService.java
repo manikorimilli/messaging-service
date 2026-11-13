@@ -52,7 +52,7 @@ public class MessageService {
 		return e;
 	}
 
-	/** "+919876543210" becomes "+91******3210". */
+	/** "+910000000001" becomes "+91******0001". */
 	static String mask(String to) {
 		if (to == null || to.length() <= 7) {
 			return "***";

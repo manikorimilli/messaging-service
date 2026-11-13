@@ -19,6 +19,6 @@ public record SendMessageRequest(
 	/** Phone number format shared by the single and the batch API. */
 	public static final String E164 = "^\\+[1-9]\\d{7,14}$";
 
-	public static final String E164_MESSAGE = "must be in E.164 format, for example +919876543210";
+	public static final String E164_MESSAGE = "must be in E.164 format, for example +910000000001";
 
 }

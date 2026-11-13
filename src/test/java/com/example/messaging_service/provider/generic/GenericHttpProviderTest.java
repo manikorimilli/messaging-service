@@ -42,7 +42,7 @@ class GenericHttpProviderTest {
 
 	private static final String URL = "https://api.example-sms.com/v1/send";
 
-	private static final OutboundMessage MESSAGE = new OutboundMessage(MessageType.SMS, "+919876543210",
+	private static final OutboundMessage MESSAGE = new OutboundMessage(MessageType.SMS, "+910000000001",
 			"Say \"hi\"");
 
 	private static final Map<String, String> VARIABLES = Map.of("token", "tok-123", "from", "+15550001111");
@@ -67,7 +67,7 @@ class GenericHttpProviderTest {
 			.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
 			// Jackson builds the JSON, so the quotes in the text are escaped correctly
 			.andExpect(content().json("""
-					{ "src": "+15550001111", "dst": "+919876543210", "text": "Say \\"hi\\"" }
+					{ "src": "+15550001111", "dst": "+910000000001", "text": "Say \\"hi\\"" }
 					""", JsonCompareMode.STRICT))
 			.andRespond(withStatus(HttpStatus.ACCEPTED).contentType(MediaType.APPLICATION_JSON).body("""
 					{ "message_uuid": ["db3ce55a-7f1d-11e1-8ea7-1231380bc196"], "api_id": "x" }
@@ -171,7 +171,7 @@ class GenericHttpProviderTest {
 		server.expect(requestTo(URL))
 			.andExpect(header("Authorization", "Bearer tok-123"))
 			.andExpect(content().json("""
-					{ "src": "+15550001111", "dst": "919876543210", "text": "Say \\"hi\\"" }
+					{ "src": "+15550001111", "dst": "910000000001", "text": "Say \\"hi\\"" }
 					""", JsonCompareMode.STRICT))
 			.andRespond(withStatus(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON).body("""
 					{ "message_uuid": ["id-1"] }

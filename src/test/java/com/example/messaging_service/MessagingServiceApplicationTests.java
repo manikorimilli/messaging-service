@@ -66,7 +66,7 @@ class MessagingServiceApplicationTests {
 	@Test
 	void unknownProviderListsTheRealAdapters() throws Exception {
 		send("""
-				{ "type": "SMS", "provider": "SINCH", "to": "+919876543210", "body": "Hi" }
+				{ "type": "SMS", "provider": "SINCH", "to": "+910000000001", "body": "Hi" }
 				""").andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.code").value("UNSUPPORTED_PROVIDER"))
 			.andExpect(jsonPath("$.detail")

@@ -12,15 +12,15 @@ import com.example.messaging_service.provider.OutboundMessage;
 
 class TemplateFillerTest {
 
-	private static final OutboundMessage MESSAGE = new OutboundMessage(MessageType.SMS, "+919876543210", "Hello");
+	private static final OutboundMessage MESSAGE = new OutboundMessage(MessageType.SMS, "+910000000001", "Hello");
 
 	private final Map<String, String> values = TemplateFiller.values(MESSAGE,
 			Map.of("account-sid", "AC123", "from", "+15551234567"));
 
 	@Test
 	void fillsBuiltInsAndVariables() {
-		assertThat(TemplateFiller.fill("{{to}}", values)).isEqualTo("+919876543210");
-		assertThat(TemplateFiller.fill("{{to_digits}}", values)).isEqualTo("919876543210");
+		assertThat(TemplateFiller.fill("{{to}}", values)).isEqualTo("+910000000001");
+		assertThat(TemplateFiller.fill("{{to_digits}}", values)).isEqualTo("910000000001");
 		assertThat(TemplateFiller.fill("{{text}}", values)).isEqualTo("Hello");
 		assertThat(TemplateFiller.fill("{{from}}", values)).isEqualTo("+15551234567");
 		assertThat(TemplateFiller.fill("https://x/Accounts/{{account-sid}}/Messages.json", values))
@@ -29,7 +29,7 @@ class TemplateFillerTest {
 
 	@Test
 	void allowsSpacesInsideBraces() {
-		assertThat(TemplateFiller.fill("{{ to }}", values)).isEqualTo("+919876543210");
+		assertThat(TemplateFiller.fill("{{ to }}", values)).isEqualTo("+910000000001");
 	}
 
 	@Test
@@ -42,7 +42,7 @@ class TemplateFillerTest {
 	@Test
 	void messageTextIsNeverExpandedAgain() {
 		Map<String, String> tricky = TemplateFiller.values(
-				new OutboundMessage(MessageType.SMS, "+919876543210", "Pay $5 {{account-sid}} \\ now"),
+				new OutboundMessage(MessageType.SMS, "+910000000001", "Pay $5 {{account-sid}} \\ now"),
 				Map.of("account-sid", "AC123"));
 
 		assertThat(TemplateFiller.fill("{{text}}", tricky)).isEqualTo("Pay $5 {{account-sid}} \\ now");
@@ -57,15 +57,15 @@ class TemplateFillerTest {
 
 	@Test
 	void fillsSingleBracePlaceholders() {
-		assertThat(TemplateFiller.fill("{from} to {to}", values)).isEqualTo("+15551234567 to +919876543210");
+		assertThat(TemplateFiller.fill("{from} to {to}", values)).isEqualTo("+15551234567 to +910000000001");
 		assertThat(TemplateFiller.fill("https://x/Accounts/{account-sid}/Messages.json", values))
 			.isEqualTo("https://x/Accounts/AC123/Messages.json");
 	}
 
 	@Test
 	void fillsUaapNamesFromTheMessage() {
-		assertThat(TemplateFiller.fill("{uaap.message.to}", values)).isEqualTo("+919876543210");
-		assertThat(TemplateFiller.fill("{{uaap.message.to_digits}}", values)).isEqualTo("919876543210");
+		assertThat(TemplateFiller.fill("{uaap.message.to}", values)).isEqualTo("+910000000001");
+		assertThat(TemplateFiller.fill("{{uaap.message.to_digits}}", values)).isEqualTo("910000000001");
 		assertThat(TemplateFiller.fill("{uaap.message.text}", values)).isEqualTo("Hello");
 		assertThat(TemplateFiller.fill("{uaap.message.template}", values)).isEqualTo("Hello");
 		assertThat(TemplateFiller.isMessageValue("uaap.message.template")).isTrue();
@@ -74,7 +74,7 @@ class TemplateFillerTest {
 
 	@Test
 	void leavesEnvironmentPlaceholdersAlone() {
-		assertThat(TemplateFiller.fill("${HOST}/{to}", values)).isEqualTo("${HOST}/+919876543210");
+		assertThat(TemplateFiller.fill("${HOST}/{to}", values)).isEqualTo("${HOST}/+910000000001");
 	}
 
 	@Test

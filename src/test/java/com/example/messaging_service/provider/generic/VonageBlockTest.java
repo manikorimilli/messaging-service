@@ -37,7 +37,7 @@ class VonageBlockTest {
 
 	private static final String URL = "https://rest.nexmo.com/sms/json";
 
-	private static final OutboundMessage MESSAGE = new OutboundMessage(MessageType.SMS, "+919876543210", "Hello");
+	private static final OutboundMessage MESSAGE = new OutboundMessage(MessageType.SMS, "+910000000001", "Hello");
 
 	private static final Map<String, String> VARIABLES = Map.of("api-key", "key123", "api-secret", "secret456",
 			"from", "MyBrand");
@@ -58,7 +58,7 @@ class VonageBlockTest {
 	void postsFormWithoutPlusAndReadsMessageId() {
 		MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
 		form.add("from", "MyBrand");
-		form.add("to", "919876543210");
+		form.add("to", "910000000001");
 		form.add("text", "Hello");
 		String basic = Base64.getEncoder().encodeToString("key123:secret456".getBytes(StandardCharsets.UTF_8));
 
@@ -81,7 +81,7 @@ class VonageBlockTest {
 			.andExpect(content().formDataContains(Map.of("type", "unicode", "text", "नमस्ते")))
 			.andRespond(accepted());
 
-		provider.send(new OutboundMessage(MessageType.SMS, "+919876543210", "नमस्ते"));
+		provider.send(new OutboundMessage(MessageType.SMS, "+910000000001", "नमस्ते"));
 		server.verify();
 	}
 
@@ -170,7 +170,7 @@ class VonageBlockTest {
 	private static ResponseCreator accepted() {
 		return withSuccess("""
 				{ "message-count": "1",
-				  "messages": [ { "to": "919876543210", "message-id": "0A0000000123ABCD1", "status": "0",
+				  "messages": [ { "to": "910000000001", "message-id": "0A0000000123ABCD1", "status": "0",
 				                  "remaining-balance": "3.14", "message-price": "0.03", "network": "40410" } ] }
 				""", MediaType.APPLICATION_JSON);
 	}

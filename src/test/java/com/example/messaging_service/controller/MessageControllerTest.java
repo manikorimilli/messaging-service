@@ -44,7 +44,7 @@ import com.example.messaging_service.service.MessageService;
 class MessageControllerTest {
 
 	private static final String VALID = """
-			{ "type": "SMS", "provider": "TWILIO", "to": "+919876543210", "body": "Welcome!" }
+			{ "type": "SMS", "provider": "TWILIO", "to": "+910000000001", "body": "Welcome!" }
 			""";
 
 	@Autowired
@@ -74,7 +74,7 @@ class MessageControllerTest {
 		given(service.send(any())).willReturn(new SendMessageResponse("ACCEPTED", "TWILIO", "SM1", "queued", null));
 
 		send("""
-				{ "type": "sms", "to": "+919876543210", "body": "Hi" }
+				{ "type": "sms", "to": "+910000000001", "body": "Hi" }
 				""").andExpect(status().isAccepted());
 
 		ArgumentCaptor<SendMessageRequest> captor = ArgumentCaptor.forClass(SendMessageRequest.class);
@@ -92,22 +92,22 @@ class MessageControllerTest {
 	@Test
 	void phoneNumberMustBeE164() throws Exception {
 		validationFailed(send("""
-				{ "type": "SMS", "to": "9876543210", "body": "Hi" }
+				{ "type": "SMS", "to": "0000000001", "body": "Hi" }
 				""")).andExpect(jsonPath("$.errors[0].field").value("to"))
-			.andExpect(jsonPath("$.errors[0].message").value("must be in E.164 format, for example +919876543210"));
+			.andExpect(jsonPath("$.errors[0].message").value("must be in E.164 format, for example +910000000001"));
 	}
 
 	@Test
 	void bodyLongerThan1600IsRejected() throws Exception {
 		validationFailed(send("""
-				{ "type": "SMS", "to": "+919876543210", "body": "%s" }
+				{ "type": "SMS", "to": "+910000000001", "body": "%s" }
 				""".formatted("a".repeat(1601)))).andExpect(jsonPath("$.errors[0].field").value("body"));
 	}
 
 	@Test
 	void unknownTypeIsValidationFailure() throws Exception {
 		validationFailed(send("""
-				{ "type": "EMAIL", "to": "+919876543210", "body": "Hi" }
+				{ "type": "EMAIL", "to": "+910000000001", "body": "Hi" }
 				""")).andExpect(jsonPath("$.detail").value("type must be one of [SMS]"));
 	}
 
@@ -224,9 +224,9 @@ class MessageControllerTest {
 		@Test
 		void everyNumberMustBeE164() throws Exception {
 			batchValidationFailed(sendBatch("""
-					{ "type": "SMS", "recipients": ["+910000000001", "9876543210"], "body": "Hi" }
+					{ "type": "SMS", "recipients": ["+910000000001", "0000000001"], "body": "Hi" }
 					""")).andExpect(jsonPath("$.errors[0].field").value("recipients[1]"))
-				.andExpect(jsonPath("$.errors[0].message").value("must be in E.164 format, for example +919876543210"));
+				.andExpect(jsonPath("$.errors[0].message").value("must be in E.164 format, for example +910000000001"));
 			verifyNoInteractions(batchService);
 		}
 

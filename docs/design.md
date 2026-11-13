@@ -442,7 +442,7 @@ public record SendMessageRequest(
         String provider,                                   // optional
         @NotBlank
         @Pattern(regexp = "^\\+[1-9]\\d{7,14}$",
-                 message = "must be in E.164 format, for example +919876543210")
+                 message = "must be in E.164 format, for example +910000000001")
         String to,
         @NotBlank @Size(max = 1600) String body) {}
 ```
@@ -789,7 +789,7 @@ All errors use one shape: Spring's built-in RFC 9457 `ProblemDetail`
   "instance": "/api/v1/messages",
   "code": "VALIDATION_FAILED",
   "errors": [
-    { "field": "to", "message": "must be in E.164 format, for example +919876543210" },
+    { "field": "to", "message": "must be in E.164 format, for example +910000000001" },
     { "field": "body", "message": "must not be blank" }
   ]
 }

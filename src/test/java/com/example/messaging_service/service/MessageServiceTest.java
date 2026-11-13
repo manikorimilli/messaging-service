@@ -29,7 +29,7 @@ import com.example.messaging_service.provider.generic.GenericHttpProvidersProper
 
 class MessageServiceTest {
 
-	private static final SendMessageRequest REQUEST = new SendMessageRequest(MessageType.SMS, null, "+919876543210",
+	private static final SendMessageRequest REQUEST = new SendMessageRequest(MessageType.SMS, null, "+910000000001",
 			"Hello");
 
 	@Test
@@ -48,7 +48,7 @@ class MessageServiceTest {
 	@Test
 	void passesRequestFieldsToProvider() {
 		MessageService service = serviceWith(message -> {
-			assertThat(message).isEqualTo(new OutboundMessage(MessageType.SMS, "+919876543210", "Hello"));
+			assertThat(message).isEqualTo(new OutboundMessage(MessageType.SMS, "+910000000001", "Hello"));
 			return new ProviderResult("id", "ok");
 		});
 
@@ -90,7 +90,7 @@ class MessageServiceTest {
 
 	@Test
 	void masksPhoneNumber() {
-		assertThat(MessageService.mask("+919876543210")).isEqualTo("+91******3210");
+		assertThat(MessageService.mask("+910000000001")).isEqualTo("+91******0001");
 		assertThat(MessageService.mask(null)).isEqualTo("***");
 	}
 

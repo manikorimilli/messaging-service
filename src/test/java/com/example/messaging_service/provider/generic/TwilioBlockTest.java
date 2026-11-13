@@ -35,7 +35,7 @@ class TwilioBlockTest {
 
 	private static final String URL = "https://api.twilio.com/2010-04-01/Accounts/AC123/Messages.json";
 
-	private static final OutboundMessage MESSAGE = new OutboundMessage(MessageType.SMS, "+919876543210", "Hello");
+	private static final OutboundMessage MESSAGE = new OutboundMessage(MessageType.SMS, "+910000000001", "Hello");
 
 	private static final Map<String, String> VARIABLES = Map.of("account-sid", "AC123", "api-key", "SK456",
 			"api-secret", "key-secret", "from", "+15550001111");
@@ -55,7 +55,7 @@ class TwilioBlockTest {
 	@Test
 	void postsFormWithBasicAuthAndReadsSidAndStatus() {
 		MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
-		form.add("To", "+919876543210");
+		form.add("To", "+910000000001");
 		form.add("From", "+15550001111");
 		form.add("Body", "Hello");
 		String basic = Base64.getEncoder().encodeToString("SK456:key-secret".getBytes(StandardCharsets.UTF_8));
@@ -66,7 +66,7 @@ class TwilioBlockTest {
 			.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_FORM_URLENCODED))
 			.andExpect(content().formData(form))
 			.andRespond(withStatus(HttpStatus.CREATED).contentType(MediaType.APPLICATION_JSON).body("""
-					{ "sid": "SM2c7f", "status": "queued", "to": "+919876543210", "num_segments": "1" }
+					{ "sid": "SM2c7f", "status": "queued", "to": "+910000000001", "num_segments": "1" }
 					"""));
 
 		ProviderResult result = provider.send(MESSAGE);
@@ -83,7 +83,7 @@ class TwilioBlockTest {
 					{ "sid": "SM1", "status": "queued" }
 					"""));
 
-		provider.send(new OutboundMessage(MessageType.SMS, "+919876543210", "नमस्ते"));
+		provider.send(new OutboundMessage(MessageType.SMS, "+910000000001", "नमस्ते"));
 		server.verify();
 	}
 
@@ -142,7 +142,7 @@ class TwilioBlockTest {
 
 	private static MultiValueMap<String, String> form(String body) {
 		MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
-		form.add("To", "+919876543210");
+		form.add("To", "+910000000001");
 		form.add("From", "+15550001111");
 		form.add("Body", body);
 		return form;
