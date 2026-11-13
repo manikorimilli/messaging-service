@@ -51,6 +51,37 @@ class TemplateFillerTest {
 	@Test
 	void listsPlaceholders() {
 		assertThat(TemplateFiller.placeholders("{{to}} and {{ from }} and {{to}}")).containsExactly("to", "from");
+		assertThat(TemplateFiller.placeholders("{from} {uaap.message.text} {{to}} ${HOST}"))
+			.containsExactly("from", "uaap.message.text", "to");
+	}
+
+	@Test
+	void fillsSingleBracePlaceholders() {
+		assertThat(TemplateFiller.fill("{from} to {to}", values)).isEqualTo("+15551234567 to +919876543210");
+		assertThat(TemplateFiller.fill("https://x/Accounts/{account-sid}/Messages.json", values))
+			.isEqualTo("https://x/Accounts/AC123/Messages.json");
+	}
+
+	@Test
+	void fillsUaapNamesFromTheMessage() {
+		assertThat(TemplateFiller.fill("{uaap.message.to}", values)).isEqualTo("+919876543210");
+		assertThat(TemplateFiller.fill("{{uaap.message.to_digits}}", values)).isEqualTo("919876543210");
+		assertThat(TemplateFiller.fill("{uaap.message.text}", values)).isEqualTo("Hello");
+		assertThat(TemplateFiller.fill("{uaap.message.template}", values)).isEqualTo("Hello");
+		assertThat(TemplateFiller.isMessageValue("uaap.message.template")).isTrue();
+		assertThat(TemplateFiller.isMessageValue("uaap.message.other")).isFalse();
+	}
+
+	@Test
+	void leavesEnvironmentPlaceholdersAlone() {
+		assertThat(TemplateFiller.fill("${HOST}/{to}", values)).isEqualTo("${HOST}/+919876543210");
+	}
+
+	@Test
+	void unknownSingleBraceOrUaapPlaceholderFails() {
+		assertThatThrownBy(() -> TemplateFiller.fill("{api_key}", values)).hasMessage("Unknown placeholder {api_key}");
+		assertThatThrownBy(() -> TemplateFiller.fill("{uaap.message.other}", values))
+			.hasMessage("Unknown placeholder {uaap.message.other}");
 	}
 
 }

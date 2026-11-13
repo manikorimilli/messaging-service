@@ -161,6 +161,43 @@ class GenericHttpProviderTest {
 	}
 
 	@Test
+	void sendsWithUaapAndSingleBracePlaceholders() {
+		Body body = new Body(BodyFormat.JSON,
+				Map.of("src", "{from}", "dst", "{uaap.message.to_digits}", "text", "{uaap.message.template}"), null);
+		Description description = new Description("EXAMPLE", "Example", EnumSet.of(MessageType.SMS), VARIABLES,
+				new Request("POST", URL, new Auth(AuthType.BEARER, null, null, "{token}", null, null), body), RESPONSE);
+		GenericHttpProvider provider = new GenericHttpProvider("example", description, builder);
+
+		server.expect(requestTo(URL))
+			.andExpect(header("Authorization", "Bearer tok-123"))
+			.andExpect(content().json("""
+					{ "src": "+15550001111", "dst": "919876543210", "text": "Say \\"hi\\"" }
+					""", JsonCompareMode.STRICT))
+			.andRespond(withStatus(HttpStatus.OK).contentType(MediaType.APPLICATION_JSON).body("""
+					{ "message_uuid": ["id-1"] }
+					"""));
+
+		assertThat(provider.send(MESSAGE).providerMessageId()).isEqualTo("id-1");
+		server.verify();
+	}
+
+	@Test
+	void reportsUaapAndNameProblems() {
+		Description broken = new Description("EXAMPLE", null, EnumSet.of(MessageType.SMS),
+				Map.of("uaap.custom", "x"),
+				new Request("POST", "https://example.com/{uaap.message.to}", new Auth(AuthType.NONE, null, null, null, null, null),
+						new Body(BodyFormat.FORM, Map.of("a", "{uaap.message.nope}", "b", "{api.key}"), null)),
+				RESPONSE);
+
+		assertThatThrownBy(() -> new GenericHttpProvider("example", broken, builder))
+			.hasMessageContaining("variables.uaap.custom: names starting with 'uaap.' are reserved for message values")
+			.hasMessageContaining("request.url may only use variables, not {{uaap.message.to}}")
+			.hasMessageContaining("unknown uaap parameter {{uaap.message.nope}} in request.body.fields.a; use one of "
+					+ "[uaap.message.template, uaap.message.text, uaap.message.to, uaap.message.to_digits]")
+			.hasMessageContaining("placeholder {{api.key}} in request.body.fields.b may only use letters, digits, '_' and '-'");
+	}
+
+	@Test
 	void reportsMissingParts() {
 		Description empty = new Description(null, null, null, null, null, null);
 

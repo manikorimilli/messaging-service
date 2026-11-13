@@ -129,6 +129,39 @@ class ProviderRegistrationTest {
 		}
 
 		@Test
+		void uaapAndSingleBracePlaceholdersAreSavedAndFilled() {
+			ProviderConfig example = ProviderExamples.plivo();
+			ProviderConfig uaap = new ProviderConfig(example.id(), example.displayName(), example.channels(),
+					example.enabled(), example.variables(),
+					new Request("POST", "https://api.plivo.com/v1/Account/{auth-id}/Message/",
+							new Auth(AuthType.BASIC, "{auth-id}", "{auth-token}", null, null, null),
+							new Body(BodyFormat.JSON,
+									Map.of("src", "{from}", "dst", "{uaap.message.to_digits}", "text", "{uaap.message.text}"),
+									null)),
+					example.response());
+			MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+			ProviderRegistry withServer = restart();
+
+			ProviderResponse saved = withServer.register(uaap);
+
+			assertThat(saved.request().body().fields()).containsEntry("dst", "{uaap.message.to_digits}");
+			String basic = Base64.getEncoder().encodeToString("MA123:real-token".getBytes(StandardCharsets.UTF_8));
+			server.expect(requestTo("https://api.plivo.com/v1/Account/MA123/Message/"))
+				.andExpect(header("Authorization", "Basic " + basic))
+				.andExpect(jsonPath("$.src").value("+15550001111"))
+				.andExpect(jsonPath("$.dst").value("15550002222"))
+				.andExpect(jsonPath("$.text").value("Hello"))
+				.andRespond(withStatus(HttpStatus.ACCEPTED).contentType(MediaType.APPLICATION_JSON)
+					.body("{ \"message_uuid\": [\"uuid-2\"] }"));
+
+			ProviderResult result = withServer.resolve("PLIVO", MessageType.SMS)
+				.send(new OutboundMessage(MessageType.SMS, "+15550002222", "Hello"));
+
+			assertThat(result.providerMessageId()).isEqualTo("uuid-2");
+			server.verify();
+		}
+
+		@Test
 		void disabledProviderIsSavedButCannotSend() {
 			Map<String, String> noToken = ProviderExamples.plivoVariables();
 			noToken.put("auth-token", "");
