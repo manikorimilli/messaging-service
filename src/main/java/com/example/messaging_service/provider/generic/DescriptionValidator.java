@@ -39,6 +39,10 @@ final class DescriptionValidator {
 			if (TemplateFiller.BUILT_INS.contains(name)) {
 				problems.add("variables.%s clashes with the built-in {{%s}}".formatted(name, name));
 			}
+			else if (name.startsWith(TemplateFiller.UAAP_PREFIX)) {
+				problems.add("variables.%s: names starting with '%s' are reserved for message values".formatted(name,
+						TemplateFiller.UAAP_PREFIX));
+			}
 		}
 		checkRequest(d.request(), d.variables().keySet(), problems);
 		checkResponse(d.response(), problems);
@@ -147,7 +151,18 @@ final class DescriptionValidator {
 	private static void checkTemplate(String template, String setting, Set<String> variables,
 			List<String> problems) {
 		for (String name : TemplateFiller.placeholders(template)) {
-			if (!TemplateFiller.BUILT_INS.contains(name) && !variables.contains(name)) {
+			if (TemplateFiller.isMessageValue(name)) {
+				continue;
+			}
+			if (name.startsWith(TemplateFiller.UAAP_PREFIX)) {
+				problems.add("unknown uaap parameter {{%s}} in %s; use one of %s".formatted(name, setting,
+						TemplateFiller.UAAP.keySet().stream().sorted().toList()));
+			}
+			else if (name.contains(".")) {
+				problems.add("placeholder {{%s}} in %s may only use letters, digits, '_' and '-'".formatted(name,
+						setting));
+			}
+			else if (!variables.contains(name)) {
 				problems.add("unknown placeholder {{%s}} in %s".formatted(name, setting));
 			}
 		}

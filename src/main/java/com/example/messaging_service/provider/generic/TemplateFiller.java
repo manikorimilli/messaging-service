@@ -10,15 +10,28 @@ import java.util.regex.Pattern;
 import com.example.messaging_service.provider.OutboundMessage;
 
 /**
- * Replaces {@code {{name}}} placeholders with values. Replacement is a single pass, so a value
- * that itself contains {@code {{...}}} (e.g. in the message text) is never expanded again.
+ * Replaces {@code {{name}}} and {@code {name}} placeholders with values. Replacement is a single
+ * pass, so a value that itself contains braces (e.g. in the message text) is never expanded again.
+ * {@code ${...}} is never a placeholder here: it is left as written.
  */
 final class TemplateFiller {
 
 	/** Placeholders filled from the message, available in every provider block. */
 	static final Set<String> BUILT_INS = Set.of("to", "to_digits", "text");
 
-	private static final Pattern PLACEHOLDER = Pattern.compile("\\{\\{\\s*([A-Za-z0-9_-]+)\\s*}}");
+	/** Prefix of the uaap names: message values under the names the console uses. */
+	static final String UAAP_PREFIX = "uaap.";
+
+	/** Each uaap name and the built-in it is filled like. */
+	static final Map<String, String> UAAP = Map.of(
+			"uaap.message.to", "to",
+			"uaap.message.to_digits", "to_digits",
+			"uaap.message.text", "text",
+			"uaap.message.template", "text");
+
+	/** {@code {{name}}} (spaces allowed inside) or {@code {name}}, but not {@code ${name}}. */
+	private static final Pattern PLACEHOLDER = Pattern
+		.compile("(?<!\\$)\\{\\{\\s*([A-Za-z0-9_.-]+)\\s*}}|(?<![${])\\{([A-Za-z0-9_.-]+)}(?!})");
 
 	private TemplateFiller() {
 	}
@@ -36,9 +49,10 @@ final class TemplateFiller {
 		Matcher matcher = PLACEHOLDER.matcher(template);
 		StringBuilder result = new StringBuilder();
 		while (matcher.find()) {
-			String value = values.get(matcher.group(1));
+			String name = name(matcher);
+			String value = values.get(UAAP.getOrDefault(name, name));
 			if (value == null) {
-				throw new IllegalArgumentException("Unknown placeholder {{" + matcher.group(1) + "}}");
+				throw new IllegalArgumentException("Unknown placeholder " + matcher.group());
 			}
 			matcher.appendReplacement(result, Matcher.quoteReplacement(value));
 		}
@@ -46,14 +60,23 @@ final class TemplateFiller {
 		return result.toString();
 	}
 
-	/** Placeholder names used in a template, e.g. "{{to}} {{from}}" gives [to, from]. */
+	/** Placeholder names used in a template, e.g. "{{to}} {from}" gives [to, from]. */
 	static Set<String> placeholders(String template) {
 		Set<String> names = new LinkedHashSet<>();
 		Matcher matcher = PLACEHOLDER.matcher(template);
 		while (matcher.find()) {
-			names.add(matcher.group(1));
+			names.add(name(matcher));
 		}
 		return names;
+	}
+
+	/** True for a name filled from the message: a built-in or a known uaap name. */
+	static boolean isMessageValue(String name) {
+		return BUILT_INS.contains(name) || UAAP.containsKey(name);
+	}
+
+	private static String name(Matcher matcher) {
+		return matcher.group(1) != null ? matcher.group(1) : matcher.group(2);
 	}
 
 }
