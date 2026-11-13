@@ -38,3 +38,6 @@ build/
 ### Providers added through the API (holds secrets) ###
 db.json
 db.json.tmp
+
+# Filled-in provider files from docs/providers (they hold real keys)
+my-*.json

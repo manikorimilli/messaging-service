@@ -1,0 +1,59 @@
+{
+  "id": "VONAGE",
+  "display-name": "Vonage",
+  "channels": [
+    "SMS"
+  ],
+  "enabled": true,
+  "variables": {
+    "api-key": "",
+    "api-secret": "",
+    "from": ""
+  },
+  "request": {
+    "method": "POST",
+    "url": "https://rest.nexmo.com/sms/json",
+    "auth": {
+      "type": "basic",
+      "username": "{{api-key}}",
+      "password": "{{api-secret}}"
+    },
+    "body": {
+      "format": "form",
+      "fields": {
+        "from": "{{from}}",
+        "to": "{{to_digits}}",
+        "text": "{{text}}"
+      },
+      "unicode-fields": {
+        "type": "unicode"
+      }
+    }
+  },
+  "response": {
+    "success": {
+      "http-status": [
+        "200"
+      ],
+      "each": "$.messages",
+      "field": "status",
+      "expected": "0"
+    },
+    "id-path": "$.messages[0].message-id",
+    "status-path": "$.messages[0].status",
+    "error": {
+      "code-path": "$.messages[?(@.status != '0')].status",
+      "message-path": "$.messages[?(@.status != '0')].error-text"
+    },
+    "retry": {
+      "http-status": [
+        "429",
+        "5xx"
+      ],
+      "codes": [
+        "1",
+        "5"
+      ]
+    }
+  }
+}
