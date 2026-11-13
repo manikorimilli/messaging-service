@@ -66,4 +66,121 @@ public final class ProviderExamples {
 			}
 			""";
 
+	/** The former built-in Twilio block as a registration body, with test values. */
+	public static final String TWILIO_JSON = """
+			{
+			  "id": "TWILIO",
+			  "display-name": "Twilio",
+			  "channels": [
+			    "SMS"
+			  ],
+			  "enabled": true,
+			  "variables": {
+			    "account-sid": "ACtest",
+			    "api-key": "SKtest",
+			    "api-secret": "test-secret",
+			    "from": "+15550001111"
+			  },
+			  "request": {
+			    "method": "POST",
+			    "url": "https://api.twilio.com/2010-04-01/Accounts/{{account-sid}}/Messages.json",
+			    "auth": {
+			      "type": "basic",
+			      "username": "{{api-key}}",
+			      "password": "{{api-secret}}"
+			    },
+			    "body": {
+			      "format": "form",
+			      "fields": {
+			        "To": "{{to}}",
+			        "From": "{{from}}",
+			        "Body": "{{text}}"
+			      }
+			    }
+			  },
+			  "response": {
+			    "success": {
+			      "http-status": [
+			        "2xx"
+			      ]
+			    },
+			    "id-path": "$.sid",
+			    "status-path": "$.status",
+			    "error": {
+			      "code-path": "$.code",
+			      "message-path": "$.message"
+			    },
+			    "retry": {
+			      "http-status": [
+			        "429",
+			        "5xx"
+			      ]
+			    }
+			  }
+			}
+			""";
+
+	/** The former built-in Vonage block as a registration body, with test values. */
+	public static final String VONAGE_JSON = """
+			{
+			  "id": "VONAGE",
+			  "display-name": "Vonage",
+			  "channels": [
+			    "SMS"
+			  ],
+			  "enabled": true,
+			  "variables": {
+			    "api-key": "test-key",
+			    "api-secret": "test-secret",
+			    "from": "MyBrand"
+			  },
+			  "request": {
+			    "method": "POST",
+			    "url": "https://rest.nexmo.com/sms/json",
+			    "auth": {
+			      "type": "basic",
+			      "username": "{{api-key}}",
+			      "password": "{{api-secret}}"
+			    },
+			    "body": {
+			      "format": "form",
+			      "fields": {
+			        "from": "{{from}}",
+			        "to": "{{to_digits}}",
+			        "text": "{{text}}"
+			      },
+			      "unicode-fields": {
+			        "type": "unicode"
+			      }
+			    }
+			  },
+			  "response": {
+			    "success": {
+			      "http-status": [
+			        "200"
+			      ],
+			      "each": "$.messages",
+			      "field": "status",
+			      "expected": "0"
+			    },
+			    "id-path": "$.messages[0].message-id",
+			    "status-path": "$.messages[0].status",
+			    "error": {
+			      "code-path": "$.messages[?(@.status != '0')].status",
+			      "message-path": "$.messages[?(@.status != '0')].error-text"
+			    },
+			    "retry": {
+			      "http-status": [
+			        "429",
+			        "5xx"
+			      ],
+			      "codes": [
+			        "1",
+			        "5"
+			      ]
+			    }
+			  }
+			}
+			""";
+
 }

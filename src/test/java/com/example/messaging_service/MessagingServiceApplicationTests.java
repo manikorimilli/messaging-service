@@ -29,14 +29,7 @@ import com.example.messaging_service.service.ProviderRegistry;
  * The whole application with both real adapters and dummy credentials. No request here reaches
  * a provider; adapter HTTP calls are covered by the adapter tests.
  */
-@SpringBootTest(properties = { "messaging.db-file=target/test-db/MessagingServiceApplicationTests.json",
-		"messaging.http-providers.twilio.variables.account-sid=ACtest",
-		"messaging.http-providers.twilio.variables.api-key=SKtest",
-		"messaging.http-providers.twilio.variables.api-secret=test-secret",
-		"messaging.http-providers.twilio.variables.from=+15550001111",
-		"messaging.http-providers.vonage.variables.api-key=test-key",
-		"messaging.http-providers.vonage.variables.api-secret=test-secret",
-		"messaging.http-providers.vonage.variables.from=MyBrand" })
+@SpringBootTest(properties = "messaging.db-file=target/test-db/MessagingServiceApplicationTests.json")
 @AutoConfigureMockMvc
 class MessagingServiceApplicationTests {
 
@@ -52,25 +45,28 @@ class MessagingServiceApplicationTests {
 	}
 
 	@Test
-	void registryGivesBackEveryProvidersJsonBlockWithSecretsMasked(@Autowired ProviderRegistry registry) {
-		assertThat(registry.descriptions(MessageType.SMS)).extracting(Description::id)
-			.containsExactly("TWILIO", "VONAGE");
-
-		Description twilio = registry.description(MessageType.SMS, "twilio").orElseThrow();
-		assertThat(twilio.request().url())
-			.isEqualTo("https://api.twilio.com/2010-04-01/Accounts/{{account-sid}}/Messages.json");
-		assertThat(twilio.variables()).containsOnlyKeys("account-sid", "api-key", "api-secret", "from")
-			.allSatisfy((name, value) -> assertThat(value).isEqualTo("****"));
+	void shipsWithoutBuiltInProviders(@Autowired ProviderRegistry registry) {
+		assertThat(registry.descriptions(MessageType.SMS)).isEmpty();
+		assertThat(registry.description(MessageType.SMS, "twilio")).isEmpty();
 	}
 
 	@Test
-	void unknownProviderListsTheRealAdapters() throws Exception {
+	void sendWithoutProviderNeedsOneWhenThereIsNoPrimary() throws Exception {
+		send("""
+				{ "type": "SMS", "to": "+910000000001", "body": "Hi" }
+				""").andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.code").value("UNSUPPORTED_MESSAGE_TYPE"))
+			.andExpect(jsonPath("$.detail").value("No provider is configured for SMS."));
+	}
+
+	@Test
+	void unknownProviderSaysNoneAreRegistered() throws Exception {
 		send("""
 				{ "type": "SMS", "provider": "SINCH", "to": "+910000000001", "body": "Hi" }
 				""").andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.code").value("UNSUPPORTED_PROVIDER"))
 			.andExpect(jsonPath("$.detail")
-				.value("Provider 'SINCH' is not supported. Supported providers: TWILIO, VONAGE."));
+				.value("Provider 'SINCH' is not supported. No providers are registered."));
 	}
 
 	@Test

@@ -142,9 +142,10 @@ public class ProviderRegistry {
 		}
 
 		if (!current.knownIds().contains(id)) {
+			String known = current.knownIds().isEmpty() ? "No providers are registered."
+					: "Supported providers: %s.".formatted(String.join(", ", current.knownIds()));
 			throw new MessagingException(ErrorCode.UNSUPPORTED_PROVIDER, null,
-					"Provider '%s' is not supported. Supported providers: %s.".formatted(id,
-							String.join(", ", current.knownIds())));
+					"Provider '%s' is not supported. %s".formatted(id, known));
 		}
 		MessageProvider provider = current.adapters().getOrDefault(type, Map.of()).get(id);
 		if (provider == null) {
@@ -451,9 +452,10 @@ public class ProviderRegistry {
 			return;
 		}
 
+		// The primary provider is optional: without one, every request must name its provider.
 		String primary = channel.primaryProvider();
 		if (primary == null) {
-			problems.add("%s.primary-provider is not set".formatted(key));
+			// nothing to check
 		}
 		else if (!channelAdapters.containsKey(primary)) {
 			problems.add("%s.primary-provider %s has no adapter for %s".formatted(key, primary, type));

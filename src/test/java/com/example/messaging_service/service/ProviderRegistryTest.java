@@ -135,9 +135,12 @@ class ProviderRegistryTest {
 		}
 
 		@Test
-		void failsWhenPrimaryIsNotSet() {
-			assertStartupFails(List.of(TWILIO), smsConfig(null, "TWILIO"),
-					"messaging.channels.sms.primary-provider is not set");
+		void startsWithoutPrimaryAndThenNeedsAProviderPerRequest() {
+			ProviderRegistry noPrimary = registry(List.of(TWILIO), smsConfig(null, "TWILIO"));
+
+			assertThat(noPrimary.resolve("twilio", MessageType.SMS)).isSameAs(TWILIO);
+			assertThatThrownBy(() -> noPrimary.resolve(null, MessageType.SMS)).isInstanceOf(MessagingException.class)
+				.hasMessage("No provider is configured for SMS.");
 		}
 
 		@Test

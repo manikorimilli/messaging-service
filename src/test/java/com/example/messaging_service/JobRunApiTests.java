@@ -17,13 +17,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 /** The job-runs API over HTTP, reading a jobHistory.json in a temp folder. */
-@SpringBootTest(properties = { "messaging.http-providers.twilio.variables.account-sid=ACtest",
-		"messaging.http-providers.twilio.variables.api-key=SKtest",
-		"messaging.http-providers.twilio.variables.api-secret=test-secret",
-		"messaging.http-providers.twilio.variables.from=+15550001111",
-		"messaging.http-providers.vonage.variables.api-key=test-key",
-		"messaging.http-providers.vonage.variables.api-secret=test-secret",
-		"messaging.http-providers.vonage.variables.from=MyBrand" })
+@SpringBootTest
 @AutoConfigureMockMvc
 class JobRunApiTests {
 

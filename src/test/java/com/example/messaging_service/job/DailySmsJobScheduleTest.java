@@ -14,14 +14,7 @@ import org.springframework.scheduling.config.ScheduledTask;
  * the test never reaches, so no SMS is sent.
  */
 @SpringBootTest(properties = { "messaging.db-file=target/test-db/DailySmsJobScheduleTest.json",
-		"messaging.batch-job.enabled=true", "messaging.batch-job.cron=0 0 3 1 1 *",
-		"messaging.http-providers.twilio.variables.account-sid=ACtest",
-		"messaging.http-providers.twilio.variables.api-key=SKtest",
-		"messaging.http-providers.twilio.variables.api-secret=test-secret",
-		"messaging.http-providers.twilio.variables.from=+15550001111",
-		"messaging.http-providers.vonage.variables.api-key=test-key",
-		"messaging.http-providers.vonage.variables.api-secret=test-secret",
-		"messaging.http-providers.vonage.variables.from=MyBrand" })
+		"messaging.batch-job.enabled=true", "messaging.batch-job.cron=0 0 3 1 1 *" })
 class DailySmsJobScheduleTest {
 
 	@Test

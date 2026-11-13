@@ -16,7 +16,10 @@ import org.springframework.web.client.RestClient;
 
 import com.example.messaging_service.provider.generic.GenericHttpProvidersProperties.Description;
 
-/** Loads a block from the real providers.json, with test values for its variables. */
+/**
+ * Loads a block from provider-examples.json (the former built-in Twilio and Vonage blocks, the same
+ * JSON one registers through the API), with test values for its variables.
+ */
 final class ProviderBlocks {
 
 	private ProviderBlocks() {
@@ -28,7 +31,7 @@ final class ProviderBlocks {
 			Map<String, Object> overrides = new HashMap<>();
 			variables.forEach((name, value) -> overrides.put("messaging.http-providers." + key + ".variables." + name, value));
 			sources.addFirst(new MapPropertySource("test-variables", overrides));
-			new YamlPropertySourceLoader().load("providers.json", new ClassPathResource("providers.json"))
+			new YamlPropertySourceLoader().load("provider-examples.json", new ClassPathResource("provider-examples.json"))
 				.forEach(sources::addLast);
 
 			Binder binder = new Binder(ConfigurationPropertySources.from(sources),

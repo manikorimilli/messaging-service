@@ -20,21 +20,20 @@ import com.example.messaging_service.provider.generic.GenericHttpProvidersProper
 
 class GenericHttpProvidersPropertiesTest {
 
-	// Loads the real application.properties, which imports providers.json. Variables are pinned so a
-	// developer's local .env cannot change the result.
+	// Loads the real application.properties, which imports providers.json.
 	private final ApplicationContextRunner runner = new ApplicationContextRunner()
 		.withInitializer(new ConfigDataApplicationContextInitializer())
-		.withPropertyValues("messaging.http-providers.twilio.variables.account-sid=AC123",
-				"messaging.http-providers.vonage.variables.from=Vonage APIs")
 		.withUserConfiguration(BindOnly.class);
 
 	@Test
-	void bindsSmsRoutingFromProvidersJson() {
+	void providersJsonShipsWithoutBuiltInProviders() {
 		runner.run(context -> {
-			ChannelSettings sms = context.getBean(GenericHttpProvidersProperties.class).channel(MessageType.SMS);
+			GenericHttpProvidersProperties properties = context.getBean(GenericHttpProvidersProperties.class);
+			ChannelSettings sms = properties.channel(MessageType.SMS);
 
-			assertThat(sms.primaryProvider()).isEqualTo("TWILIO");
-			assertThat(sms.enabledProviders()).containsExactly("TWILIO", "VONAGE");
+			assertThat(properties.httpProviders()).isEmpty();
+			assertThat(sms.primaryProvider()).isNull();
+			assertThat(sms.enabledProviders()).isEmpty();
 		});
 	}
 
@@ -81,8 +80,8 @@ class GenericHttpProvidersPropertiesTest {
 
 	@Test
 	void bindsTwilioBlockKeepingFieldNameCase() {
-		runner.run(context -> {
-			Description twilio = context.getBean(GenericHttpProvidersProperties.class).httpProviders().get("twilio");
+		{
+			Description twilio = ProviderBlocks.load("twilio", Map.of("account-sid", "AC123"));
 
 			assertThat(twilio.id()).isEqualTo("TWILIO");
 			assertThat(twilio.name()).isEqualTo("Twilio");
@@ -100,13 +99,13 @@ class GenericHttpProvidersPropertiesTest {
 					org.assertj.core.api.Assertions.entry("Body", "{{text}}"));
 			assertThat(twilio.response().idPath()).isEqualTo("$.sid");
 			assertThat(twilio.response().retry().httpStatus()).containsExactly("429", "5xx");
-		});
+		}
 	}
 
 	@Test
 	void bindsVonageBlockWithItsSpecialRules() {
-		runner.run(context -> {
-			Description vonage = context.getBean(GenericHttpProvidersProperties.class).httpProviders().get("vonage");
+		{
+			Description vonage = ProviderBlocks.load("vonage", Map.of("from", "Vonage APIs"));
 
 			assertThat(vonage.id()).isEqualTo("VONAGE");
 			assertThat(vonage.variables()).containsEntry("from", "Vonage APIs");
@@ -118,7 +117,7 @@ class GenericHttpProvidersPropertiesTest {
 			assertThat(vonage.response().success().expected()).isEqualTo("0");
 			assertThat(vonage.response().idPath()).isEqualTo("$.messages[0].message-id");
 			assertThat(vonage.response().retry().codes()).containsExactly("1", "5");
-		});
+		}
 	}
 
 	@Configuration

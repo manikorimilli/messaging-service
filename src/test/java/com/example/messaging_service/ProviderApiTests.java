@@ -28,13 +28,7 @@ import com.example.messaging_service.dto.ProviderConfig;
 import com.example.messaging_service.provider.store.ProviderStore;
 
 /** The provider APIs over HTTP, with the real registry and a db.json in a temp folder. */
-@SpringBootTest(properties = { "messaging.http-providers.twilio.variables.account-sid=ACtest",
-		"messaging.http-providers.twilio.variables.api-key=SKtest",
-		"messaging.http-providers.twilio.variables.api-secret=test-secret",
-		"messaging.http-providers.twilio.variables.from=+15550001111",
-		"messaging.http-providers.vonage.variables.api-key=test-key",
-		"messaging.http-providers.vonage.variables.api-secret=test-secret",
-		"messaging.http-providers.vonage.variables.from=MyBrand" })
+@SpringBootTest
 @AutoConfigureMockMvc
 class ProviderApiTests {
 
@@ -70,10 +64,7 @@ class ProviderApiTests {
 
 		mvc.perform(get("/api/v1/providers"))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$[*].id").value(contains("PLIVO", "TWILIO", "VONAGE")))
-			.andExpect(jsonPath("$[1].source").value("providers.json"))
-			.andExpect(jsonPath("$[1].read-only").value(true))
-			.andExpect(jsonPath("$[1].variables.api-secret").value("****"));
+			.andExpect(jsonPath("$[*].id").value(contains("PLIVO")));
 
 		mvc.perform(put("/api/v1/providers/plivo").contentType(MediaType.APPLICATION_JSON)
 			.content(ProviderExamples.PLIVO_JSON.replace("\"real-token\"", "\"****\"")
@@ -108,17 +99,22 @@ class ProviderApiTests {
 	}
 
 	@Test
-	void providersFromProvidersJsonAreReadOnly() throws Exception {
+	void twilioAndVonageAreNotBuiltInAndRegisterLikeAnyProvider() throws Exception {
 		mvc.perform(get("/api/v1/providers/twilio"))
-			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.read-only").value(true));
-		mvc.perform(put("/api/v1/providers/TWILIO").contentType(MediaType.APPLICATION_JSON)
-			.content(ProviderExamples.PLIVO_JSON.replace("\"plivo\"", "\"TWILIO\"")))
-			.andExpect(status().isConflict())
-			.andExpect(jsonPath("$.code").value("PROVIDER_READ_ONLY"));
-		mvc.perform(delete("/api/v1/providers/VONAGE"))
-			.andExpect(status().isConflict())
-			.andExpect(jsonPath("$.code").value("PROVIDER_READ_ONLY"));
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.code").value("PROVIDER_NOT_FOUND"));
+
+		for (String json : new String[] { ProviderExamples.TWILIO_JSON, ProviderExamples.VONAGE_JSON }) {
+			mvc.perform(post("/api/v1/providers").contentType(MediaType.APPLICATION_JSON).content(json))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.source").value("db.json"))
+				.andExpect(jsonPath("$.read-only").value(false))
+				.andExpect(jsonPath("$.enabled").value(true));
+		}
+		mvc.perform(get("/api/v1/providers")).andExpect(jsonPath("$[*].id").value(contains("TWILIO", "VONAGE")));
+
+		mvc.perform(delete("/api/v1/providers/TWILIO")).andExpect(status().isNoContent());
+		mvc.perform(delete("/api/v1/providers/VONAGE")).andExpect(status().isNoContent());
 	}
 
 }
